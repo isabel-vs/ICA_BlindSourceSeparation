@@ -1,0 +1,7 @@
+name = "ICA_BlindSourceSeparation"
+uuid = "822b78d8-c4d8-4e4d-8607-4515e2b6a9d9"
+authors = ["Erik Felgendreher felgendreher@campus.tu-berlin.de"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.11"
