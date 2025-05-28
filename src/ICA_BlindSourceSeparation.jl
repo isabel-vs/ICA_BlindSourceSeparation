@@ -1,7 +1,55 @@
 module ICA_BlindSourceSeparation
 
 # Write your package code here.
-using Plots;
+using Plots
+using LinearAlgebra
+using Statistics
+
+"""
+    whiten(X::Vector{Float64}) -> Vector{Float64}
+
+    Checks wether vector is empty.
+    Applies whitening function to every column except the first (time).
+    Returns a vector of Float64.
+"""
+function whiten(x::Vector{Float64})
+    @assert !(isempty(x)) "Input vector must not be empty."
+
+    # Mean center
+    μ = mean(x)
+    x_centered = x .- μ
+
+    # Standard deviation (for unit variance)
+    σ = std(x_centered)
+    @assert !(σ ≈ 0) "Standard deviation is zero; cannot whiten constant vector."
+
+    # Whitened vector: zero mean and unit variance
+    x_whitened = x_centered ./ σ
+
+    return x_whitened
+end
+
+"""
+    whiten_dataset(X::Matrix{Float64}) -> Matrix{Float64}
+
+    Checks wether dataset contains at least two columns.
+    Applies whitening function to every column except the first (time).
+    Returns a matrix of Float64.
+"""
+function whiten_dataset(X::Matrix{Float64})
+    n_rows, n_cols = size(X)
+    @assert n_cols ≥ 2 "Matrix must have at least two columns."
+
+    # Copy to avoid modifying the original matrix
+    X_whitened = copy(X)
+
+    # Whiten each column except the first
+    for j in 2:n_cols
+        X_whitened[:, j] = whiten(X[:, j])
+    end
+
+    return X_whitened
+end
 
 """
     read_dataset(filename::String) -> Matrix{Float64}
@@ -61,6 +109,10 @@ function plot_matrix(data::Matrix{Float64})
     end
     
     display(plt)
+end
+
+function demo()
+    plot_matrix(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
 end
