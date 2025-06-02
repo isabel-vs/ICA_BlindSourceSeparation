@@ -115,4 +115,6 @@ function demo()
     plot_matrix(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
+export whiten, whiten_dataset, read_dataset, plot_matrix, demo
+
 end
