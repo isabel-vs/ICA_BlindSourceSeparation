@@ -22,19 +22,34 @@ end
 function whiten(x::Vector{Float64})
     @assert !(isempty(x)) "Input vector must not be empty."
 
-    # Mean center
+    n = size(x,1)
+
+    # sample mean
     μ = mean(x)
     x_centered = x .- μ
 
-    # Standard deviation (for unit variance)
-    σ = std(x_centered)
-    @assert !(σ ≈ 0) "Standard deviation is zero; cannot whiten constant vector."
+    #calculate sample covariance matrix
+    test = (x_centered * x_centered')
 
-    # Whitened vector: zero mean and unit variance
-    x_whitened = x_centered ./ σ
+    Sigma =  1/(n-1) * sum(x_centered * x_centered')
+
+    #create whitening matrix
+    U, Lambda, _ = svd(Sigma)
+    W = Diagonal(1/sqrt.(Lambda .+ 1e-5)) * U'
+
+    #whiten data
+    x_whitened = W * x_centered
 
     return x_whitened
 end
+
+function whiten(X::Matrix{Float64})
+    
+    [T,n] = size(X)
+
+    # sample mean
+    μ = mean(x)
+    x_centered = x .- μ
 
 """
     whiten_dataset(X::sensorData) -> sensorData
@@ -126,6 +141,6 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
-export whiten, whiten_dataset, read_dataset, plot_matrix, demo
+export whiten, whiten_dataset, read_dataset, plot_matrix, demo, test
 
 end
