@@ -114,24 +114,6 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
-function test()
-    sensor = read_dataset("data/foetal_ecg.dat")
-    data = sensor.data
-    data_white = whiten_matrix(data)
-
-    (T,N) = size(data_white)     # T time-samples, N sensors
-
-    # center matrix
-    μ = mean(data_white, dims=1)
-    X_centered = data_white .- μ
-
-    # calculate sample covariance matrix (NxN)
-    Sigma = (X_centered' * X_centered)/T
-    
-    return Sigma
-
-end
-
 export whiten_dataset, read_dataset, plot_matrix, demo, test
 
 end
