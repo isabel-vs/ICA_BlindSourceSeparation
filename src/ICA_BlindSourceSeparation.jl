@@ -5,11 +5,18 @@ using Plots
 using LinearAlgebra
 using Statistics
 
+mutable struct sensorData
+    # Vector of size C containing timestamps
+    time::Vector{Float64}
+    # CxN Matrix containing data of N sensors corresponding to timestamps. 
+    data::Matrix{Float64}
+end
+
 """
     whiten(X::Vector{Float64}) -> Vector{Float64}
 
     Checks wether vector is empty.
-    Applies whitening function to every column except the first (time).
+    Applies whitening function to vector.
     Returns a vector of Float64.
 """
 function whiten(x::Vector{Float64})
@@ -30,35 +37,35 @@ function whiten(x::Vector{Float64})
 end
 
 """
-    whiten_dataset(X::Matrix{Float64}) -> Matrix{Float64}
+    whiten_dataset(X::sensorData) -> sensorData
 
-    Checks wether dataset contains at least two columns.
-    Applies whitening function to every column except the first (time).
-    Returns a matrix of Float64.
+    Checks wether dataset contains at least one column.
+    Applies whitening function to every column.
+    Returns the whitened dataset.
 """
-function whiten_dataset(X::Matrix{Float64})
-    n_rows, n_cols = size(X)
-    @assert n_cols ≥ 2 "Matrix must have at least two columns."
+function whiten_dataset(X::sensorData)::sensorData
+    n_rows, n_cols = size(X.data)
+    @assert n_cols > 0 "Matrix must have at least one column."
 
     # Copy to avoid modifying the original matrix
-    X_whitened = copy(X)
+    X_whitened = deepcopy(X.data)
 
-    # Whiten each column except the first
-    for j in 2:n_cols
-        X_whitened[:, j] = whiten(X[:, j])
+    # Whiten each column of the dataset
+    for j in 1:n_cols
+        X_whitened[:, j] = whiten(X_whitened[:, j])
     end
 
-    return X_whitened
+    return sensorData(X.time, X_whitened)
 end
 
 """
-    read_dataset(filename::String) -> Matrix{Float64}
+    read_dataset(filename::String) -> sensorData
 
     Reads a file containing numbers separated by spaces or tabs.
     Number of columns is detected by analyzing the first valid line.
-    Returns a matrix of Float64.
+    Returns an instance of sensorData.
 """
-function read_dataset(filename::String)::Matrix{Float64}
+function read_dataset(filename::String)::sensorData 
     data = Float64[]
     ncols = 0;
     nrows = 0;
@@ -84,19 +91,23 @@ function read_dataset(filename::String)::Matrix{Float64}
         end
     end
 
-    return reshape(data, ncols, nrows)'
+    data = reshape(data, ncols, nrows)'
+    time = data[:, 1]
+    data = data[:, 2:end]
+
+    return sensorData(time, data)
 end
 
 """
-    plot_matrix(data::Matrix{Float64})
+    plot_matrix(dataset::sensorData)
     
-    Plots each column of the dataset (except the first) against the first column
+    Plots each column of the dataset against the timestamp vector
 """
-function plot_matrix(data::Matrix{Float64})
-    @assert size(data, 2) >= 2 "Data must have at least two columns (time + signal)"
+function plot_dataset(dataset::sensorData)
+    @assert size(dataset.data, 2) >= 1 "Data must have at least one column"
 
-    time = data[:, 1]
-    signals = data[:, 2:end]
+    time = dataset.time
+    signals = dataset.data
     nsignals = size(signals, 2)
 
     spacing = 1.2 * maximum(abs.(signals))  
@@ -112,7 +123,7 @@ function plot_matrix(data::Matrix{Float64})
 end
 
 function demo()
-    plot_matrix(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
+    plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
 end
