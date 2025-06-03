@@ -13,49 +13,37 @@ mutable struct sensorData
 end
 
 """
-    whiten(X::Vector{Float64}) -> Vector{Float64}
-
-    Checks wether vector is empty.
-    Applies whitening function to vector.
-    Returns a vector of Float64.
-"""
-function whiten(x::Vector{Float64})
-    @assert !(isempty(x)) "Input vector must not be empty."
-
-    # Mean center
-    μ = mean(x)
-    x_centered = x .- μ
-
-    # Standard deviation (for unit variance)
-    σ = std(x_centered)
-    @assert !(σ ≈ 0) "Standard deviation is zero; cannot whiten constant vector."
-
-    # Whitened vector: zero mean and unit variance
-    x_whitened = x_centered ./ σ
-
-    return x_whitened
-end
-
-"""
     whiten_dataset(X::sensorData) -> sensorData
 
-    Checks wether dataset contains at least one column.
-    Applies whitening function to every column.
+    Applies PCA whitening to TxN data matrix
+    T: number of samples
+    N: number of sensors
     Returns the whitened dataset.
 """
-function whiten_dataset(X::sensorData)::sensorData
-    n_rows, n_cols = size(X.data)
-    @assert n_cols > 0 "Matrix must have at least one column."
+function whiten_dataset(dataset::sensorData)::sensorData
+    n_rows, n_cols = size(dataset.data)
+    @assert n_cols > 0 "Matrix must have at least two column."
 
     # Copy to avoid modifying the original matrix
-    X_whitened = deepcopy(X.data)
+    X = deepcopy(dataset.data)
+    T = size(X,1)
 
-    # Whiten each column of the dataset
-    for j in 1:n_cols
-        X_whitened[:, j] = whiten(X_whitened[:, j])
-    end
+    # center matrix
+    μ = mean(X, dims=1)
+    X_centered = X .- μ
 
-    return sensorData(X.time, X_whitened)
+    # calculate sample covariance matrix (NxN)
+    Σ = cov(X, dims=1, corrected=false)
+
+    # eigendecomposition of Σ
+    eigenvals, U = eigen(Σ)
+    
+    # calculate whitening matrix
+    W = Diagonal(1 ./sqrt.(eigenvals)) * U'
+
+    data_white = X_centered * W'
+
+    return sensorData(dataset.time, data_white)
 end
 
 """
@@ -125,5 +113,25 @@ end
 function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
+
+function test()
+    sensor = read_dataset("data/foetal_ecg.dat")
+    data = sensor.data
+    data_white = whiten_matrix(data)
+
+    (T,N) = size(data_white)     # T time-samples, N sensors
+
+    # center matrix
+    μ = mean(data_white, dims=1)
+    X_centered = data_white .- μ
+
+    # calculate sample covariance matrix (NxN)
+    Sigma = (X_centered' * X_centered)/T
+    
+    return Sigma
+
+end
+
+export whiten_dataset, read_dataset, plot_matrix, demo, test
 
 end
