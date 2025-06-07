@@ -22,6 +22,7 @@ end
 """
 function whiten_dataset(dataset::sensorData)::sensorData
     n_rows, n_cols = size(dataset.data)
+    @assert length(dataset.time) == n_rows "Mismatch between time length and signal lengths"
     @assert n_cols > 0 "Matrix must have at least two column."
 
     # Copy to avoid modifying the original matrix
@@ -69,7 +70,7 @@ function read_dataset(filename::String)::sensorData
             values = split(line)
             if ncols == 0
                 ncols = length(values)
-                @assert ncols > 0 "No valid data found in the file"
+                @assert ncols > 1 "No valid data found in the file"
             else
                 @assert length(values) == ncols "Inconsistent number of columns on line $(nrows + 1)"
             end
@@ -78,6 +79,8 @@ function read_dataset(filename::String)::sensorData
             nrows += 1
         end
     end
+
+    @assert nrows > 0 "The file contains no valid data rows"
 
     data = reshape(data, ncols, nrows)'
     time = data[:, 1]
@@ -92,6 +95,7 @@ end
     Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
+    @assert length(dataset.time) == size(dataset.data, 2) "Mismatch between time length and signal lengths"
     @assert size(dataset.data, 2) >= 1 "Data must have at least one column"
 
     time = dataset.time
@@ -114,6 +118,6 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
-export whiten_dataset, read_dataset, plot_matrix, demo, test
+export whiten_dataset, read_dataset, plot_dataset, demo, test
 
 end
