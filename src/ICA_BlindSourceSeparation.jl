@@ -22,8 +22,14 @@ end
 """
 function whiten_dataset(dataset::sensorData)::sensorData
     n_rows, n_cols = size(dataset.data)
-    @assert length(dataset.time) == n_rows "Mismatch between time length and signal lengths"
-    @assert n_cols > 0 "Matrix must have at least two column."
+    #@assert length(dataset.time) == n_rows "Mismatch between time length and signal lengths"
+    #@assert n_cols > 0 "Matrix must have at least two column."
+    if (length(dataset.time) != n_rows)
+        throw("Mismatch between time length and signal lengths")
+    end
+    if (n_cols == 0)
+        throw("Matrix must have at least two column.")
+    end
 
     # Copy to avoid modifying the original matrix
     X = deepcopy(dataset.data)
@@ -70,9 +76,15 @@ function read_dataset(filename::String)::sensorData
             values = split(line)
             if ncols == 0
                 ncols = length(values)
-                @assert ncols > 1 "No valid data found in the file"
+                #@assert ncols > 1 "No valid data found in the file"
+                if (ncols <= 1)
+                    throw("No valid data found in the file")
+                end
             else
-                @assert length(values) == ncols "Inconsistent number of columns on line $(nrows + 1)"
+                #@assert length(values) == ncols "Inconsistent number of columns on line $(nrows + 1)"
+                if (length(values) != ncols)
+                    throw("Inconsistent number of columns on line $(nrows + 1)")
+                end
             end
 
             append!(data, parse.(Float64, values))
@@ -80,7 +92,10 @@ function read_dataset(filename::String)::sensorData
         end
     end
 
-    @assert nrows > 0 "The file contains no valid data rows"
+    #@assert nrows > 0 "The file contains no valid data rows"
+    if (nrows == 0)
+        throw("The file contains no valid data rows")
+    end
 
     data = reshape(data, ncols, nrows)'
     time = data[:, 1]
@@ -95,8 +110,14 @@ end
     Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
-    @assert length(dataset.time) == size(dataset.data, 1) "Mismatch between time length and signal lengths"
-    @assert size(dataset.data, 2) >= 1 "Data must have at least one column"
+    #@assert length(dataset.time) == size(dataset.data, 1) "Mismatch between time length and signal lengths"
+    #@assert size(dataset.data, 2) >= 1 "Data must have at least one column"
+    if (length(dataset.time) != size(dataset.data, 1)) 
+        throw("Mismatch between time length and signal lengths!")
+    end
+    if (size(dataset.data, 2) == 0)
+        throw("Data must have at least one column!")
+    end
 
     time = dataset.time
     signals = dataset.data

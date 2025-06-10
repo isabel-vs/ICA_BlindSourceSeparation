@@ -13,5 +13,27 @@ using LinearAlgebra
     N = size(dataset_white.data, 2)
     Sigma = cov(dataset_white.data, dims=1, corrected=false)
     @test isapprox(Sigma, I(N))
+
+    # test if reading functions recognize edgecases correctly
+    test_files = ["empty.dat", "misshaped.dat", "timecolumn.dat"]
+    for i in test_files
+        path = joinpath(root, "data", i)
+        test_val = false
+        try
+            read_dataset(path)
+        catch
+            test_val = true
+        end
+        @test test_val
+    end
+    
+    path = joinpath(root, "data", "with_comments.dat")
+    test_val = true
+    try
+        read_dataset(path)
+    catch
+        test_val = false
+    end
+    @test test_val
     
 end
