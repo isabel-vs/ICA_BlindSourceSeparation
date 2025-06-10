@@ -5,11 +5,15 @@ using Plots
 using LinearAlgebra
 using Statistics
 
-mutable struct sensorData
-    # Vector of size C containing timestamps
-    time::Vector{Float64}
-    # CxN Matrix containing data of N sensors corresponding to timestamps. 
-    data::Matrix{Float64}
+include("SensorData.jl")
+include("Picard.jl")
+include("JADE.jl")
+include("Shibbs.jl")
+
+@enum ALGORITHM begin
+    jade = 1
+    picard = 2
+    shibbs = 3
 end
 
 """
@@ -22,8 +26,6 @@ end
 """
 function whiten_dataset(dataset::sensorData)::sensorData
     n_rows, n_cols = size(dataset.data)
-    #@assert length(dataset.time) == n_rows "Mismatch between time length and signal lengths"
-    #@assert n_cols > 0 "Matrix must have at least two column."
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
     end
@@ -76,12 +78,10 @@ function read_dataset(filename::String)::sensorData
             values = split(line)
             if ncols == 0
                 ncols = length(values)
-                #@assert ncols > 1 "No valid data found in the file"
                 if (ncols <= 1)
                     throw("No valid data found in the file")
                 end
             else
-                #@assert length(values) == ncols "Inconsistent number of columns on line $(nrows + 1)"
                 if (length(values) != ncols)
                     throw("Inconsistent number of columns on line $(nrows + 1)")
                 end
@@ -92,7 +92,6 @@ function read_dataset(filename::String)::sensorData
         end
     end
 
-    #@assert nrows > 0 "The file contains no valid data rows"
     if (nrows == 0)
         throw("The file contains no valid data rows")
     end
@@ -110,8 +109,6 @@ end
     Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
-    #@assert length(dataset.time) == size(dataset.data, 1) "Mismatch between time length and signal lengths"
-    #@assert size(dataset.data, 2) >= 1 "Data must have at least one column"
     if (length(dataset.time) != size(dataset.data, 1)) 
         throw("Mismatch between time length and signal lengths!")
     end
@@ -139,6 +136,18 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
-export whiten_dataset, read_dataset, plot_dataset, demo, test
+function perform_separation(dataset::sensorData, algo::ALGORITHM)::sensorData 
+    if (algo == jade)
+        return ica_jade(dataset)
+    end 
+    if (algo == picard)
+        return ica_picard(dataset)
+    end
+    if (algo == shibbs)
+        return ica_shibbs(dataset)
+    end
+end
+
+export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation
 
 end
