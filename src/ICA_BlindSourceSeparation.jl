@@ -95,7 +95,7 @@ end
     Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
-    @assert length(dataset.time) == size(dataset.data, 2) "Mismatch between time length and signal lengths"
+    @assert length(dataset.time) == size(dataset.data, 1) "Mismatch between time length and signal lengths"
     @assert size(dataset.data, 2) >= 1 "Data must have at least one column"
 
     time = dataset.time
