@@ -6,15 +6,6 @@ using LinearAlgebra
 using Statistics
 
 include("SensorData.jl")
-include("Picard.jl")
-include("JADE.jl")
-include("Shibbs.jl")
-
-@enum ALGORITHM begin
-    jade = 1
-    picard = 2
-    shibbs = 3
-end
 
 """
     whiten_dataset(X::sensorData) -> sensorData
@@ -136,18 +127,22 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
-function perform_separation(dataset::sensorData, algo::ALGORITHM)::sensorData 
-    if (algo == jade)
-        return ica_jade(dataset)
-    end 
-    if (algo == picard)
+include("Shibbs.jl")
+include("Picard.jl")
+include("JADE.jl")
+
+function perform_separation(dataset::sensorData, algo::String)::sensorData 
+    if (algo == "jade")
+        return ica_jade(dataset) 
+    elseif (algo == "picard")
         return ica_picard(dataset)
-    end
-    if (algo == shibbs)
+    elseif (algo == "shibbs")
         return ica_shibbs(dataset)
+    else
+        throw("No valid algorithm selected!")
     end
 end
 
-export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation
+export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, ALGORITHM
 
 end
