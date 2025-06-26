@@ -51,11 +51,11 @@ end
 
     Applies PCA whitening to TxN data matrix to decorrelate m sources
     T: number of samples
-    N: number of sensors
+    n: number of sensors
     m: number of sources
     Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
-function whiten_dataset(dataset::sensorData, m::Int64)::sensorData
+function whiten_dataset(dataset::sensorData, m::Int64)::Tuple{sensorData, Matrix{Float64}, Matrix{Float64}}
     """
     [U,D] 		= eig((X*X')/T)	; 
     [puiss,k]	= sort(diag(D))	;
@@ -95,7 +95,7 @@ function whiten_dataset(dataset::sensorData, m::Int64)::sensorData
 
     # select m largest eigenvalues
     rangeW = n-m+1:n
-    scales = sqrt(eigenvals[rangeW])
+    scales = sqrt.(eigenvals[rangeW])
         
     # calculate whitening matrix
     W = Diagonal(1 ./scales) * U[:, rangeW]'
