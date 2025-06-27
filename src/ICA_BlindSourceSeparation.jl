@@ -56,15 +56,6 @@ end
     Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
 function whiten_dataset(dataset::sensorData, m::Int64)::Tuple{sensorData, Matrix{Float64}, Matrix{Float64}}
-    """
-    [U,D] 		= eig((X*X')/T)	; 
-    [puiss,k]	= sort(diag(D))	;
-    rangeW		= n-m+1:n			; % indices to the m  most significant directions
-    scales		= sqrt(puiss(rangeW))		; % scales
-    W  		= diag(1./scales)  * U(1:n,k(rangeW))'	;	% whitener
-    iW  		= U(1:n,k(rangeW)) * diag(scales) 	;	% its pseudo-inverse
-    X		= W*X;
-    """
     
     n_rows, n_cols = size(dataset.data)
     if (length(dataset.time) != n_rows)
@@ -75,7 +66,7 @@ function whiten_dataset(dataset::sensorData, m::Int64)::Tuple{sensorData, Matrix
     end
     
     # Copy to avoid modifying the original matrix
-    X = deepcopy(dataset.data)
+    X = dataset.data
     T = size(X,1)
     n = size(X,2)
 
@@ -88,7 +79,7 @@ function whiten_dataset(dataset::sensorData, m::Int64)::Tuple{sensorData, Matrix
     X_centered = X .- μ
 
     # calculate sample covariance matrix (NxN)
-    Σ = cov(X, dims=1, corrected=false)
+    Σ = cov(X_centered, dims=1, corrected=false)
 
     # eigendecomposition of Σ
     eigenvals, U = eigen(Σ)
@@ -193,7 +184,7 @@ include("JADE.jl")
 
 function perform_separation(dataset::sensorData, algo::String)::sensorData 
     if (algo == "jade")
-        return ica_jade(dataset) 
+        return ica_jade(dataset, 2) 
     elseif (algo == "picard")
         return ica_picard(dataset)
     elseif (algo == "shibbs")
