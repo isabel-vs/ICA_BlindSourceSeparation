@@ -19,7 +19,13 @@ function ica_jade(dataset::sensorData, m::Int64)::sensorData
     T = size(d_white.data, 1)
     V = joint_diag(T, m, CM)
 
-    return sensorData(dataset.time, V)
+    # source estimation
+    X_white = d_white.data
+    S = X_white * V     #TODO: check if correct? maybe transpose?
+
+    #TODO: order according to "most energetically significant" (as in matlab code)
+
+    return sensorData(dataset.time, S)
 
 end
 
@@ -29,10 +35,6 @@ end
 function estimate_cumulants(dataset::sensorData, m::Int64)
     X = (dataset.data)'
     T = size(X,2)
-
-    println(size(X))
-    println(T)
-    println(m)
 
     dimsymm = (m*(m+1))÷2   # Dimension of space of real symm. matrices
     num_cumm = dimsymm      # TODO: skip??
