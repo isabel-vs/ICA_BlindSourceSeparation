@@ -5,6 +5,7 @@ Author: Erik Felgendreher
 Adapted from Jean-François Cardoso's MATLAB version
 =------------------------------------------------------------=#
 
+
 """
     estimate_cumulants(X::Matrix{Float64}) -> Matrix{Float64}
 
@@ -27,72 +28,50 @@ function estimate_cumulants(X::Matrix{Float64})::Matrix{Float64}
     return CM
 end
 """
-    joint_diagonalize(CM::Matrix{Float64}; threshold=1e-6, max_iterations=Inf) -> Matrix{Float64}
+    joint_diagonalize(CM::Matrix{Float64}, seuil::Float64) -> Matrix{Float64}, Float64
     Joint diagonalization using Givens rotation
     threshold: target size for the rotation size
     max_iterations: if threshold is not undercut, finish anyway after max iterations
-    Returns diagonalization matrix
+    Returns diagonalization matrix and rotation size
 """
-function joint_diagonalize(CM::Matrix{Float64}; threshold=1e-6, max_iterations=Inf)::Matrix{Float64}
+function joint_diagonalize(CM::Matrix{Float64}, seuil::Float64)
     m, _ = size(CM)
-    V = Matrix{Float64}(I, m, m)
     nbcm = div(size(CM, 2), m)
-    sweep = 0
+    V = Matrix{Float64}(I, m, m)
+    nbrs = 1
 
-    while true
-        sweep += 1
-        rotations = 0
-
+    while nbrs != 0
+        nbrs = 0
         for p in 1:m-1
             for q in p+1:m
-                Ip = collect(p:m:m * nbcm)
-                Iq = collect(q:m:m * nbcm)
+                Ip = p:m:m*nbcm
+                    Iq = q:m:m*nbcm
 
-                g1 = CM[p, Ip] .- CM[q, Iq]
-                g2 = CM[p, Iq] .+ CM[q, Ip]
-                g = vcat(g1, g2)
+                    # Computation of Givens angle
+                    g = [CM[p, Ip] - CM[q, Iq]; CM[p, Iq] + CM[q, Ip]]
+                    gg = g * g'
+                    ton = gg[1, 1] - gg[2, 2]
+                    toff = gg[1, 2] + gg[2, 1]
+                    theta = 0.5 * atan(toff, ton + sqrt(ton^2 + toff^2))
 
-                gg = g * g'
-                ton = gg[1, 1] - gg[2, 2]
-                toff = gg[1, 2] + gg[2, 1]
+                    # Givens update
+                    if abs(theta) > seuil
+                        nbrs += 1
+                        c = cos(theta)
+                        s = sin(theta)
+                        G = [c -s; s c]
 
-                theta = 0.5 * atan(toff / (ton + sqrt(ton^2 + toff^2)))
-
-                if abs(theta) > threshold
-                    c = cos(theta)
-                    s = sin(theta)
-                    G = [c -s; s c]
-                    pair = [p, q]
-                    V[:, pair] .= V[:, pair] * G
-
-                    CM_pair_p = CM[p, :]
-                    CM_pair_q = CM[q, :]
-
-                    CM[p, :] .= c .* CM_pair_p .+ s .* CM_pair_q
-                    CM[q, :] .= -s .* CM_pair_p .+ c .* CM_pair_q
-
-                    for k in 1:nbcm
-                        Ip_k = (k - 1) * m + p
-                        Iq_k = (k - 1) * m + q
-                        tmp_p = CM[:, Ip_k]
-                        tmp_q = CM[:, Iq_k]
-
-                        CM[:, Ip_k] .= c .* tmp_p .+ s .* tmp_q
-                        CM[:, Iq_k] .= -s .* tmp_p .+ c .* tmp_q
+                        pair = [p, q]
+                        V[:, pair] = V[:, pair] * G
+                        CM[pair, :] = G' * CM[pair, :]
+                        CM[:, [Ip; Iq]] = [c * CM[:, Ip] + s * CM[:, Iq] -s * CM[:, Ip] + c * CM[:, Iq]]
                     end
-
-                    rotations += 1
-                end
             end
-        end
-
-        rot_size = norm(V - I(m), Inf)
-        if (rot_size < m * threshold || sweep >= max_iterations)
-            break
         end
     end
 
-    return V
+    rot_size = norm(V - I, Frobenius)
+    return V, rot_size
 end
 """
     sort_by_energy(B::Matrix{Float64}) -> Matrix{Float64}
@@ -111,31 +90,65 @@ function sort_by_energy(B::Matrix{Float64})::Matrix{Float64}
     return B_flipped
 end
 
-# Main SHIBBS function
+"""
+    shibbs_core(X::Matrix{Float64}, m::Int = size(X, 1)) -> Matrix{Float64}
+    Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
+    Returns transformation matrix applicable to X
+"""
 function shibbs_core(X::Matrix{Float64}, m::Int = size(X, 1))
     n, T = size(X)
-    if (m > n)
-        throw("Cannot extract more sources than sensors.")
+    seuil = 0.01 / sqrt(T)
+
+    if m > n
+        error("shibbs -> Do not ask for more sources than sensors.")
     end
 
-    # Estimate cumulants and perform joint diagonalization
-    CM = estimate_cumulants(X)
-    V = joint_diagonalize(CM; threshold=0.01 / sqrt(T), max_iterations=Inf)
+    # Remove mean
+    X .-= mean(X, dims=2)
 
-    # Final separation matrix
-    B_final = Matrix(V') #* B
-    B_final = sort_by_energy(B_final)
-    return B_final
+    # Whitening
+    cov = (X * X') / T
+    D, U = eigen(cov)
+    sorted_idx = sortperm(D, rev=true)[1:m]
+    scales = sqrt.(D[sorted_idx])
+    B = Diagonal(1 ./ scales) * U[:, sorted_idx]'  # Whitener
+    
+    # === Outer loop ===
+    OneMoreStep = true
+    nSteps = 0
+    while OneMoreStep
+        nSteps += 1
+        # Estimate cumulants
+        CM = estimate_cumulants(X)
+
+        # Joint diagonalization
+        V, rot_size = joint_diagonalize(CM, seuil)
+
+        # Update
+        X = V' * X
+        B = V' * B
+
+        # Check convergence
+        OneMoreStep = rot_size >= (m * seuil)
+    end
+
+    # Sort components by energy
+    B = sort_by_energy(B)
+
+    # Fix signs: first column non-negative
+    b = B[:, 1]
+    signs = sign.(sign.(b) .+ 0.1)
+    B = Diagonal(signs) * B
+
+    return B
 end
 
-function ica_shibbs(dataset::sensorData)::sensorData
-    # Preprocessing
-    d = whiten_dataset(dataset)
-    
-    X = Matrix(d.data')
+function ica_shibbs(dataset::sensorData, m::Int64)::sensorData
+    X = Matrix(dataset.data')
     B = shibbs_core(X)
     
     S=B*X
     S = Matrix(S')
     return sensorData(dataset.time, S)
 end
+
