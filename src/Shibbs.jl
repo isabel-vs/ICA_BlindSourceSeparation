@@ -39,8 +39,11 @@ function joint_diagonalize(CM::Matrix{Float64}, seuil::Float64)
     nbcm = div(size(CM, 2), m)
     V = Matrix{Float64}(I, m, m)
     nbrs = 1
+    max_iters = 5000
+    nIter = 0 
 
-    while nbrs != 0
+    while nbrs != 0 && nIter < max_iters
+        nIter += 1
         nbrs = 0
         for p in 1:m-1
             for q in p+1:m
@@ -70,7 +73,7 @@ function joint_diagonalize(CM::Matrix{Float64}, seuil::Float64)
         end
     end
 
-    rot_size = norm(V - I, Frobenius)
+    rot_size = norm(V - I)
     return V, rot_size
 end
 """
@@ -116,7 +119,9 @@ function shibbs_core(X::Matrix{Float64}, m::Int = size(X, 1))
     # === Outer loop ===
     OneMoreStep = true
     nSteps = 0
-    while OneMoreStep
+    maxSteps = 10
+    while OneMoreStep && nSteps < maxSteps
+        println("$nSteps")
         nSteps += 1
         # Estimate cumulants
         CM = estimate_cumulants(X)
