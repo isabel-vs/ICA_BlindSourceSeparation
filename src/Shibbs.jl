@@ -156,4 +156,3 @@ function ica_shibbs(dataset::sensorData, m::Int64)::sensorData
     S = Matrix(S')
     return sensorData(dataset.time, S)
 end
-
