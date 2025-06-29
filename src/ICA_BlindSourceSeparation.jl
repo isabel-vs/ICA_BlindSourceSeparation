@@ -183,7 +183,7 @@ include("JADE.jl")
 
 function perform_separation(dataset::sensorData, algo::String)::sensorData 
     if (algo == "jade")
-        return ica_jade(dataset) 
+        return ica_jade(dataset, 2) 
     elseif (algo == "picard")
         return ica_picard(dataset)
     elseif (algo == "shibbs")
