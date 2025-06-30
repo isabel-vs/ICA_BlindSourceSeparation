@@ -18,6 +18,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/Erik Felgendreher/ICA_BlindSourceSeparation.jl",
+    repo="github.com/isabel-vs/ICA_BlindSourceSeparation",
     devbranch="main",
 )
