@@ -21,7 +21,7 @@ Plot dataset
 
 Run JADE algorithm
 
-    x = perform_separation(x, "jade")
+    x = perform_separation(x, algo::Jade, size(x.data, 1))
 
 Plot again
 

@@ -7,12 +7,15 @@ using Statistics: cov, mean, Diagonal
 
 include("SensorData.jl")
 
-# define algorithm structs
+# define algorithm structs 
+#TODO: Separate them into their respective file
 struct Jade
+    nSensors::Integer
 end
 struct Picard
 end
 struct Shibbs
+    nSensors::Integer
 end
 
 
@@ -191,9 +194,9 @@ include("Shibbs.jl")
 include("Picard.jl")
 include("JADE.jl")
 
-perform_separation(dataset, algo::Jade, nSensors) = ica_jade(dataset, nSensors)
+perform_separation(dataset, algo::Jade) = ica_jade(dataset, algo.nSensors)
 perform_separation(dataset, algo::Picard) = ica_picard(dataset)
-perform_separation(dataset, algo::Shibbs, nSensors) = ica_shibbs(dataset, nSensors)
+perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors)
 perform_separation(dataset, algo) = error("$algo is not a valid algorithm")
 
 export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, ALGORITHM
