@@ -11,7 +11,7 @@ Adapted from Jean-François Cardoso's MATLAB version
 
     Returns cumulant matrix.
 """
-function estimate_cumulants(X::Matrix{Float64})::Matrix{Float64}
+function estimate_cumulants(X::AbstractMatrix)
     m, T = size(X)
     nbcm = m
     CM = zeros(m, m * nbcm)
@@ -34,7 +34,7 @@ end
     max_iterations: if threshold is not undercut, finish anyway after max iterations
     Returns diagonalization matrix and rotation size
 """
-function joint_diagonalize(CM::Matrix{Float64}, seuil::Float64)
+function joint_diagonalize(CM::AbstractMatrix, seuil::Float64)
     m, _ = size(CM)
     nbcm = div(size(CM, 2), m)
     V = Matrix{Float64}(I, m, m)
@@ -81,7 +81,7 @@ end
     Sort rows of B to put most energetic sources first
     Returns sorted matrix
 """
-function sort_by_energy(B::Matrix{Float64})::Matrix{Float64}
+function sort_by_energy(B::AbstractMatrix)
     A = pinv(B)
     energies = sum(abs2, A; dims=1)
     sorted_indices = sortperm(vec(energies), rev=true)
@@ -98,39 +98,32 @@ end
     Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
     Returns transformation matrix applicable to X
 """
-function shibbs_core(X::Matrix{Float64}, m::Int = size(X, 1))
-    n, T = size(X)
+function ica_shibbs(dataset::sensorData, m::Int64)
+    d_white, B, iW = whiten_dataset(dataset, m)
+
+    T = size(d_white.data, 1)
+    n = size(d_white.data, 2)
     seuil = 0.01 / sqrt(T)
 
     if m > n
         error("shibbs -> Do not ask for more sources than sensors.")
     end
-
-    # Remove mean
-    X .-= mean(X, dims=2)
-
-    # Whitening
-    cov = (X * X') / T
-    D, U = eigen(cov)
-    sorted_idx = sortperm(D, rev=true)[1:m]
-    scales = sqrt.(D[sorted_idx])
-    B = Diagonal(1 ./ scales) * U[:, sorted_idx]'  # Whitener
     
     # === Outer loop ===
     OneMoreStep = true
     nSteps = 0
-    maxSteps = 10
+    maxSteps = 1
     while OneMoreStep && nSteps < maxSteps
         println("$nSteps")
         nSteps += 1
         # Estimate cumulants
-        CM = estimate_cumulants(X)
+        CM = estimate_cumulants(d_white.data)
 
         # Joint diagonalization
         V, rot_size = joint_diagonalize(CM, seuil)
 
         # Update
-        X = V' * X
+        d_white.data = V' * d_white.data
         B = V' * B
 
         # Check convergence
@@ -145,14 +138,7 @@ function shibbs_core(X::Matrix{Float64}, m::Int = size(X, 1))
     signs = sign.(sign.(b) .+ 0.1)
     B = Diagonal(signs) * B
 
-    return B
-end
+    S = d_white.data * V
 
-function ica_shibbs(dataset::sensorData, m::Int64)::sensorData
-    X = Matrix(dataset.data')
-    B = shibbs_core(X)
-    
-    S=B*X
-    S = Matrix(S')
     return sensorData(dataset.time, S)
 end

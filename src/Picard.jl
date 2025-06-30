@@ -1,4 +1,4 @@
 
-function ica_picard(dataset::sensorData)::sensorData
+function ica_picard(dataset::sensorData)
 
 end

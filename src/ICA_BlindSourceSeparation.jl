@@ -1,7 +1,9 @@
 module ICA_BlindSourceSeparation
 
 # Write your package code here.
-using Plots
+using Plots.plot 
+using Plots.display
+
 using LinearAlgebra
 using Statistics
 
@@ -15,7 +17,7 @@ include("SensorData.jl")
     N: number of sensors
     Returns the whitened dataset.
 """
-function whiten_dataset(dataset::sensorData)::sensorData
+function whiten_dataset(dataset::sensorData)
     n_rows, n_cols = size(dataset.data)
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
@@ -54,7 +56,7 @@ end
     m: number of sources
     Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
-function whiten_dataset(dataset::sensorData, m::Int64)::Tuple{sensorData, Matrix{Float64}, Matrix{Float64}}
+function whiten_dataset(dataset::sensorData, m::Int64)
     
     n_rows, n_cols = size(dataset.data)
     if (length(dataset.time) != n_rows)
@@ -103,10 +105,10 @@ end
     Number of columns is detected by analyzing the first valid line.
     Returns an instance of sensorData.
 """
-function read_dataset(filename::String)::sensorData 
+function read_dataset(filename::String)
     data = Float64[]
-    ncols = 0;
-    nrows = 0;
+    ncols = 0
+    nrows = 0
 
     open(filename, "r") do io
         for line in eachline(io)
@@ -181,17 +183,10 @@ include("Shibbs.jl")
 include("Picard.jl")
 include("JADE.jl")
 
-function perform_separation(dataset::sensorData, algo::String)::sensorData 
-    if (algo == "jade")
-        return ica_jade(dataset, 2) 
-    elseif (algo == "picard")
-        return ica_picard(dataset)
-    elseif (algo == "shibbs")
-        return ica_shibbs(dataset)
-    else
-        throw("No valid algorithm selected!")
-    end
-end
+perform_separation(dataset, algo::Jade, nSensors) = ica_jade(dataset, nSensors)
+perform_separation(dataset, algo::Picard) = ica_picard(dataset)
+perform_separation(dataset, algo::Shibbs, nSensors) = ica_shibbs(dataset, nSensors)
+perform_separation(dataset, algo) = error("$algo is not a valid algorithm")
 
 export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, ALGORITHM
 

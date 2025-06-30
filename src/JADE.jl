@@ -7,7 +7,7 @@ Adapted from Jean-François Cardoso's MATLAB version
 """
     JADE Algorithm for ICA source separation
 """
-function ica_jade(dataset::sensorData, m::Int64)::sensorData
+function ica_jade(dataset::sensorData, m::Int64)
 
     # whitening & projection onto signal subspace
     d_white, W, iW = whiten_dataset(dataset, m)
@@ -31,7 +31,7 @@ end
 """
     Estimation of cumulant matrices
 """
-function estimate_cumulants(dataset::sensorData, m::Int64)::Matrix{Float64}
+function estimate_cumulants(dataset::sensorData, m::Int64)
     X = (dataset.data)'
     T = size(X,2)
 
@@ -64,7 +64,7 @@ end
 """
 Joint diagonalization of the cumulant matrices
 """
-function joint_diag(T::Int64, m::Int64, CM_in::Matrix{Float64})::Matrix{Float64}
+function joint_diag(T::Int64, m::Int64, CM_in::Matrix{Float64})
     CM = copy(CM_in)
     V = Matrix{Float64}(I, m, m)
     thresh = 1/(100 * sqrt(T))
