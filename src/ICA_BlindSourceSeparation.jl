@@ -3,7 +3,7 @@ module ICA_BlindSourceSeparation
 using Plots: plot, display
 
 using LinearAlgebra: eigen
-using Statistics: cov, mean
+using Statistics: cov, mean, Diagonal
 
 include("SensorData.jl")
 
