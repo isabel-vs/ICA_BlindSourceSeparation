@@ -1,13 +1,20 @@
 module ICA_BlindSourceSeparation
 
-# Write your package code here.
-using Plots.plot 
-using Plots.display
+using Plots: plot, display
 
-using LinearAlgebra
-using Statistics
+using LinearAlgebra: eigen
+using Statistics: cov, mean
 
 include("SensorData.jl")
+
+# define algorithm structs
+struct Jade
+end
+struct Picard
+end
+struct Shibbs
+end
+
 
 """
     whiten_dataset(X::sensorData) -> sensorData
@@ -175,6 +182,7 @@ function plot_dataset(dataset::sensorData)
     display(plt)
 end
 
+#TODO: add doc string
 function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end

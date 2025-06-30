@@ -1,7 +1,7 @@
 using ICA_BlindSourceSeparation
 using Test
-using Statistics
-using LinearAlgebra
+using Statistics: cov
+using LinearAlgebra: I
 
 @testset "ICA_BlindSourceSeparation.jl" begin
     # Write your tests here.
