@@ -36,4 +36,5 @@ using LinearAlgebra
     end
     @test test_val
     
+    # testidea: all algorithms should create roughly the same output
 end
