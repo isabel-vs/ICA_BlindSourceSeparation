@@ -4,7 +4,7 @@ CurrentModule = ICA_BlindSourceSeparation
 
 # ICA_BlindSourceSeparation
 
-Documentation for [ICA_BlindSourceSeparation](https://github.com/Erik Felgendreher/ICA_BlindSourceSeparation.jl).
+Documentation for [ICA_BlindSourceSeparation](https://github.com/isabel-vs/ICA_BlindSourceSeparation.jl).
 
 ```@index
 ```
