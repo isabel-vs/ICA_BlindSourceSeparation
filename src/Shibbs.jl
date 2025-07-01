@@ -14,6 +14,7 @@ Returns cumulant matrix.
 function estimate_cumulants(X::AbstractMatrix)
     m, T = size(X)
     nbcm = m
+    println("$m")
     CM = zeros(m, m * nbcm)
     R = I(m)
 
@@ -100,14 +101,18 @@ Returns transformation matrix applicable to X
 """
 function ica_shibbs(dataset::sensorData, m::Int64)
     d_white, B, iW = whiten_dataset(dataset, m)
+    X = Matrix(d_white.data')
 
     T = size(d_white.data, 1)
     n = size(d_white.data, 2)
+
     seuil = 0.01 / sqrt(T)
 
     if m > n
         error("shibbs -> Do not ask for more sources than sensors.")
     end
+
+    V = zeros(2,2)
     
     # === Outer loop ===
     OneMoreStep = true
@@ -117,14 +122,14 @@ function ica_shibbs(dataset::sensorData, m::Int64)
         println("$nSteps")
         nSteps += 1
         # Estimate cumulants
-        CM = estimate_cumulants(d_white.data)
+        CM = estimate_cumulants(X)
 
         # Joint diagonalization
         V, rot_size = joint_diagonalize(CM, seuil)
 
         # Update
-        d_white.data = V' * d_white.data
-        B = V' * B
+        X = V' * X
+        B = V * B
 
         # Check convergence
         OneMoreStep = rot_size >= (m * seuil)
@@ -138,7 +143,7 @@ function ica_shibbs(dataset::sensorData, m::Int64)
     signs = sign.(sign.(b) .+ 0.1)
     B = Diagonal(signs) * B
 
-    S = d_white.data * V
+    S = X' * V
 
     return sensorData(dataset.time, S)
 end

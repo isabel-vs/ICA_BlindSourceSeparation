@@ -1,9 +1,9 @@
 module ICA_BlindSourceSeparation
 
-using Plots: plot, display
+using Plots: plot, plot!, display
 
-using LinearAlgebra: eigen
-using Statistics: cov, mean, Diagonal
+using LinearAlgebra: eigen, I, sqrt, pinv, Diagonal
+using Statistics: cov, mean, norm
 
 include("SensorData.jl")
 
@@ -20,7 +20,7 @@ end
 
 
 """
-    whiten_dataset(X::sensorData) -> sensorData
+    whiten_dataset(X::sensorData)
 
 Applies PCA whitening to TxN data matrix
 T: number of samples
@@ -203,6 +203,6 @@ perform_separation(dataset, algo::Picard) = ica_picard(dataset)
 perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors)
 perform_separation(dataset, algo) = error("$algo is not a valid algorithm")
 
-export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, ALGORITHM
+export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, Jade, Picard, Shibbs
 
 end
