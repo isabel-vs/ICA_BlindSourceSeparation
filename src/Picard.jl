@@ -102,33 +102,29 @@ function ica_picard(dataset::sensorData)
     return sensorData(dataset.time, Y)
 end
 
-function regularize_hessian(h::Matrix{Float64}, lambda_min::Float64)::Matrix{Float64}
-    for i in eachindex(h)
-        if h[i] < lambda_min
-            h[i] = lambda_min
-        end
-    end
-    return h
-end
-
-function score(Y::AbstractMatrix{Float64})
+function score(Y)
     return tanh.(Y)
 end
 
-function score_der(psiY::AbstractMatrix{Float64})
+function score_der(psiY)
     return -mean(psiY .^ 2, dims=2) .+ 1.0
 end
 
-function gradient(Y::AbstractMatrix{Float64}, psiY::AbstractMatrix{Float64})
+function gradient(Y, psiY)
     T = size(Y, 2)
-    return psiY * Y' ./ T
+    return (psiY * transpose(Y)) / T
 end
 
-function proj_hessian_approx(Y::AbstractMatrix{Float64}, psidY_mean::AbstractVector{Float64}, G::AbstractMatrix{Float64})
-    N = size(Y, 2)
+function proj_hessian_approx(Y, psidY_mean, G)
+    N = size(Y, 1)
     diagonal = psidY_mean * ones(1, N)
-    off_diag  = diag(G) * ones(1, N)
-    return 0.5 .* (diagonal .+ diagonal' .- off_diag .- off_diag')
+    off_diag  = repeat(diag(G), 1, N)
+    hess = 0.5 * (diagonal + transpose(diagonal) - off_diag - transpose(off_diag))
+    return hess
+end
+
+function regularize_hessian(h, lambda_min)
+    return max.(h, lambda_min)
 end
 
 function solve_hessian(G::AbstractMatrix{Float64}, h::AbstractMatrix{Float64})
