@@ -185,7 +185,6 @@ function plot_dataset(dataset::sensorData)
     display(plt)
 end
 
-#TODO: add doc string
 """
     demo()
 
