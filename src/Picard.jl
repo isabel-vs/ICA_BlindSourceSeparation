@@ -184,3 +184,8 @@ function line_search(Y::AbstractMatrix{Float64}, W::AbstractMatrix{Float64}, log
     end
     return false, Y_new, W_new, current_loss, α .* direction
 end
+
+struct Picard
+end
+
+perform_separation(dataset, algo::Picard) = ica_picard(dataset)

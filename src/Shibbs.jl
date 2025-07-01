@@ -147,3 +147,9 @@ function ica_shibbs(dataset::sensorData, m::Int64)
 
     return sensorData(dataset.time, S)
 end
+
+struct Shibbs
+    nSensors::Integer
+end
+
+perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors)

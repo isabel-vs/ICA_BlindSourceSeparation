@@ -110,3 +110,9 @@ function joint_diag(T::Int64, m::Int64, CM_in::Matrix{Float64})
     end
     return V
 end
+
+struct Jade
+    nSensors::Integer
+end
+
+perform_separation(dataset, algo::Jade) = ica_jade(dataset, algo.nSensors)
