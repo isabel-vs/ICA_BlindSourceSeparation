@@ -1,6 +1,6 @@
 using LinearAlgebra
 
-function ica_picard(dataset::sensorData)::sensorData
+function ica_picard(dataset::sensorData)
     
     tol=1e-7
     lambda_min=0.01
