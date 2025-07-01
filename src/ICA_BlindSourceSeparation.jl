@@ -22,10 +22,10 @@ end
 """
     whiten_dataset(X::sensorData) -> sensorData
 
-    Applies PCA whitening to TxN data matrix
-    T: number of samples
-    N: number of sensors
-    Returns the whitened dataset.
+Applies PCA whitening to TxN data matrix
+T: number of samples
+N: number of sensors
+Returns the whitened dataset.
 """
 function whiten_dataset(dataset::sensorData)
     n_rows, n_cols = size(dataset.data)
@@ -60,11 +60,11 @@ end
 """
     whiten_dataset(X::sensorData, m::Int64) -> sensorData, W::Matrix{Float64}, iW::Matrix{Float64}
 
-    Applies PCA whitening to TxN data matrix to decorrelate m sources
-    T: number of samples
-    n: number of sensors
-    m: number of sources
-    Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
+Applies PCA whitening to TxN data matrix to decorrelate m sources
+T: number of samples
+n: number of sensors
+m: number of sources
+Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
 function whiten_dataset(dataset::sensorData, m::Int64)
     
@@ -111,9 +111,9 @@ end
 """
     read_dataset(filename::String) -> sensorData
 
-    Reads a file containing numbers separated by spaces or tabs.
-    Number of columns is detected by analyzing the first valid line.
-    Returns an instance of sensorData.
+Reads a file containing numbers separated by spaces or tabs.
+Number of columns is detected by analyzing the first valid line.
+Returns an instance of sensorData.
 """
 function read_dataset(filename::String)
     data = Float64[]
@@ -159,7 +159,7 @@ end
 """
     plot_matrix(dataset::sensorData)
     
-    Plots each column of the dataset against the timestamp vector
+Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
     if (length(dataset.time) != size(dataset.data, 1)) 
@@ -186,6 +186,11 @@ function plot_dataset(dataset::sensorData)
 end
 
 #TODO: add doc string
+"""
+    demo()
+
+Plots the whitened data in the foetal_ecg database.
+"""
 function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end

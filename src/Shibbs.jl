@@ -7,9 +7,9 @@ Adapted from Jean-François Cardoso's MATLAB version
 
 
 """
-    estimate_cumulants(X::Matrix{Float64}) -> Matrix{Float64}
+    estimate_cumulants(X::AbstractMatrix)
 
-    Returns cumulant matrix.
+Returns cumulant matrix.
 """
 function estimate_cumulants(X::AbstractMatrix)
     m, T = size(X)
@@ -28,13 +28,11 @@ function estimate_cumulants(X::AbstractMatrix)
     return CM
 end
 """
-    joint_diagonalize(CM::Matrix{Float64}, seuil::Float64) -> Matrix{Float64}, Float64
-    Joint diagonalization using Givens rotation
-    threshold: target size for the rotation size
-    max_iterations: if threshold is not undercut, finish anyway after max iterations
-    Returns diagonalization matrix and rotation size
+    joint_diagonalize(CM::AbstractMatrix, seuil::Float64)
+
+Returns diagonalization matrix and rotation size
 """
-function joint_diagonalize(CM::AbstractMatrix, seuil::Float64)
+function joint_diagonalize(CM::AbstractMatrix, threshold::Float64)
     m, _ = size(CM)
     nbcm = div(size(CM, 2), m)
     V = Matrix{Float64}(I, m, m)
@@ -58,7 +56,7 @@ function joint_diagonalize(CM::AbstractMatrix, seuil::Float64)
                     theta = 0.5 * atan(toff, ton + sqrt(ton^2 + toff^2))
 
                     # Givens update
-                    if abs(theta) > seuil
+                    if abs(theta) > threshold
                         nbrs += 1
                         c = cos(theta)
                         s = sin(theta)
@@ -77,9 +75,10 @@ function joint_diagonalize(CM::AbstractMatrix, seuil::Float64)
     return V, rot_size
 end
 """
-    sort_by_energy(B::Matrix{Float64}) -> Matrix{Float64}
-    Sort rows of B to put most energetic sources first
-    Returns sorted matrix
+    sort_by_energy(B::AbstractMatrix)
+
+Sort rows of B to put most energetic sources first
+Returns sorted matrix
 """
 function sort_by_energy(B::AbstractMatrix)
     A = pinv(B)
@@ -94,9 +93,10 @@ function sort_by_energy(B::AbstractMatrix)
 end
 
 """
-    shibbs_core(X::Matrix{Float64}, m::Int = size(X, 1)) -> Matrix{Float64}
-    Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
-    Returns transformation matrix applicable to X
+    ica_shibbs(dataset::sensorData, m::Int64)
+
+Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
+Returns transformation matrix applicable to X
 """
 function ica_shibbs(dataset::sensorData, m::Int64)
     d_white, B, iW = whiten_dataset(dataset, m)
