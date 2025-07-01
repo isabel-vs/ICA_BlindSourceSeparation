@@ -19,6 +19,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/isabel-vs/ICA_BlindSourceSeparation",
+    repo="github.com/isabel-vs/ICA_BlindSourceSeparation.jl",
     devbranch="main",
 )
