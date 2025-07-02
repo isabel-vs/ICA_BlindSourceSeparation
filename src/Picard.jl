@@ -102,11 +102,27 @@ function ica_picard(dataset::sensorData)
     return sensorData(dataset.time, Y)
 end
 
-function score(Y)
+"""
+    core(Y::AbstractArray{<:Real})
+    Apply the hyperbolic tangent elementwise to each entry of `Y`.
+    # Arguments
+    - `Y::AbstractArray{<:Real}`: input array (vector, matrix, or higher‑dimensional array) of real numbers.
+    # Returns
+    - an array with the same shape as `Y`, where each element is `tanh(y)`.
+"""
+function score(Y::AbstractArray{<:Real})
     return tanh.(Y)
 end
 
-function score_der(psiY)
+"""
+    core_der(psiY::AbstractMatrix{<:Real})
+    Compute the average derivative of the hyperbolic tangent nonlinearity for each row of `psiY`.
+    # Arguments
+    - `psiY::AbstractMatrix{<:Real}`: input array of size `N×T`, where each row is a signal component over `T` observations.
+    # Returns
+    - an `N×1` array in which each entry  represents the average derivative of the `tanh` nonlinearity, evaluated at each value in the corresponding row of `psiY`.
+"""
+function score_der(psiY::AbstractMatrix{<:Real})
     return -mean(psiY .^ 2, dims=2) .+ 1.0
 end
 
@@ -127,58 +143,60 @@ function regularize_hessian(h, lambda_min)
     return max.(h, lambda_min)
 end
 
-function solve_hessian(G::AbstractMatrix{Float64}, h::AbstractMatrix{Float64})
-    return h \ G
+function solve_hessian(G, h)
+    return G ./ h
 end
 
-function loss(Y::AbstractMatrix{Float64}, signs::AbstractVector{Float64})
+function loss(Y, signs)
     N, T = size(Y)
     total = 0.0
     for i in 1:N
         y = Y[i, :]
-        total += signs[i] * mean(abs.(y) .+ log1p.(exp.(-2.0 .* abs.(y))))
+        s = signs[i, :]
+        term = abs.(y) .+ log1p.(exp.(-2 .* abs.(y)))
+        total += sum(s .* term) / T
     end
     return total
 end
 
-function l_bfgs_direction(G::AbstractMatrix{Float64}, h::AbstractMatrix{Float64}, s_list::Vector{Matrix{Float64}}, y_list::Vector{Matrix{Float64}}, r_list::Vector{Float64}, ortho::Bool)
+function l_bfgs_direction(G, h, s_list, y_list, r_list)
     q = copy(G)
-    a_list = Float64[]
-    for (s, y, r) in Iterators.reverse(zip(s_list, y_list, r_list))
-        α = r * sum(s .* q)
-        push!(a_list, α)
-        q .-= α .* y
+    a_list = Vector{Float64}()
+    m = length(s_list)
+    for i in m:-1:1
+        s = s_list[i]
+        y = y_list[i]
+        r = r_list[i]
+        alpha = r * sum(s .* q)
+        push!(a_list, alpha)
+        q .-= alpha .* y
     end
-    z = if ortho
-        q ./ h
-    else
-        h \ q
-    end
-    for (s, y, r, α) in zip(s_list, y_list, r_list, Iterators.reverse(a_list))
-        β = r * sum(y .* z)
-        z .+= (α - β) .* s
+    z = solve_hessian(q, h)
+    for i in 1:m
+        s = s_list[i]
+        y = y_list[i]
+        r = r_list[i]
+        alpha = a_list[m - i + 1]
+        beta = r * sum(y .* z)
+        z .+= (alpha - beta) .* s
     end
     return -z
 end
 
-function line_search(Y::AbstractMatrix{Float64}, W::AbstractMatrix{Float64}, log_lik::Function, direction::AbstractMatrix{Float64}, signs::AbstractVector{Float64}, current_loss::Union{Nothing, Float64}; ls_tries::Int, verbose::Bool, ortho::Bool, extended::Bool)
-    α = 1.0
-    if current_loss === nothing
-        current_loss = loss(Y, signs)
-    end
-    Y_new = similar(Y)
-    W_new = similar(W)
+function line_search(Y, direction, signs, current_loss; ls_tries)
+    alpha = 1.0
+    loss0 = isfinite(current_loss) ? current_loss : loss(Y, signs)
+    Y_new = Y
+    new_loss = loss0
     for _ in 1:ls_tries
-        transform = ortho ? expm(α .* direction) : I + α .* direction
-        Y_new .= transform * Y
-        W_new .= transform * W
-        new_loss = loss(Y_new, signs)
-        if new_loss < current_loss
-            return true, Y_new, W_new, new_loss, α .* direction
+        Y_candidate = exp(alpha * direction) * Y
+        cand_loss = loss(Y_candidate, signs)
+        if cand_loss < loss0
+            return true, Y_candidate, cand_loss, alpha
         end
-        α /= 2
+        alpha /= 2
     end
-    return false, Y_new, W_new, current_loss, α .* direction
+    return false, Y_new, new_loss, alpha
 end
 
 struct Picard
