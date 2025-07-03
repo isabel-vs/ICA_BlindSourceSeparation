@@ -31,7 +31,7 @@ end
     ica_shibbs(dataset::sensorData, m::Integer)
 
 Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
-Returns transformation matrix applicable to X
+Returns the dataset combined with transformation matrix as well as the transformation Matrix
 """
 function ica_shibbs(dataset::sensorData, m::Integer)
     d_white, B, iW = whiten_dataset(dataset, m)
@@ -77,9 +77,9 @@ function ica_shibbs(dataset::sensorData, m::Integer)
     signs = sign.(sign.(b) .+ 0.1)
     B = Diagonal(signs) * B
 
-    S = X' * V
+    S = B * Matrix(dataset.data')
 
-    return sensorData(dataset.time, S)
+    return sensorData(dataset.time, Matrix(S')), B
 end
 
 struct Shibbs
