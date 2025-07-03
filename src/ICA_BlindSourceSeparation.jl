@@ -6,6 +6,7 @@ using LinearAlgebra: eigen, I, sqrt, pinv, Diagonal
 using Statistics: cov, mean, norm
 
 include("SensorData.jl")
+include("JnC_commons.jl")
 include("Shibbs.jl")
 include("Picard.jl")
 include("JADE.jl")
