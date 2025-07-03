@@ -8,7 +8,7 @@ makedocs(;
     authors="Erik Felgendreher felgendreher@campus.tu-berlin.de",
     sitename="ICA_BlindSourceSeparation.jl",
     format=Documenter.HTML(;
-        canonical="https://Erik Felgendreher.github.io/ICA_BlindSourceSeparation.jl",
+        canonical="https://github.com/isabel-vs/ICA_BlindSourceSeparation.jl",
         edit_link="main",
         assets=String[],
     ),
