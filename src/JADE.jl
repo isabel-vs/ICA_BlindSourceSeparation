@@ -7,7 +7,7 @@ Adapted from Jean-François Cardoso's MATLAB version
 """
     JADE Algorithm for ICA source separation
 """
-function ica_jade(dataset::sensorData, m::Int64)
+function ica_jade(dataset::sensorData, m::Integer)
 
     # whitening & projection onto signal subspace
     d_white, W, iW = whiten_dataset(dataset, m)
@@ -17,7 +17,8 @@ function ica_jade(dataset::sensorData, m::Int64)
 
     # joint diagonalization of cumulant matrices
     T = size(d_white.data, 1)
-    V = joint_diag(T, m, CM)
+    #V = joint_diag(T, m, CM)
+    V, _ = joint_diagonalize(CM, 0.01 / sqrt(T), (2^63)-1)
 
     # source estimation
     X_white = d_white.data
@@ -31,7 +32,7 @@ end
 """
     Estimation of cumulant matrices
 """
-function estimate_cumulants(dataset::sensorData, m::Int64)
+function estimate_cumulants(dataset::sensorData, m::Integer)
     X = (dataset.data)'
     T = size(X,2)
 
@@ -58,57 +59,6 @@ function estimate_cumulants(dataset::sensorData, m::Int64)
     end
     
     return CM
-end
-
-
-"""
-Joint diagonalization of the cumulant matrices
-"""
-function joint_diag(T::Int64, m::Int64, CM_in::Matrix{Float64})
-    CM = copy(CM_in)
-    V = Matrix{Float64}(I, m, m)
-    thresh = 1/(100 * sqrt(T))
-    num_cumm = size(CM, 2) ÷ m
-
-    repeat = true
-    sweep = 0
-    updates = 0
-    while repeat
-        repeat = false
-        sweep += 1
-
-        for p = 1:m-1
-            for q = p+1:m
-                Ip = p:m:(m*num_cumm)
-                Iq = q:m:(m*num_cumm)
-
-                #compute givens angle
-                row1 = (@view(CM[p,Ip]) - @view(CM[q,Iq]))'
-                row2 = (@view(CM[p,Iq]) + @view(CM[q,Ip]))'
-                g = [row1 ; row2]
-                gg = g*g'
-                ton = gg[1,1] - gg[2,2]
-                toff = gg[1,2] + gg[2,1]
-                theta = 0.5 * atan(toff, ton+sqrt(ton^2 + toff^2))
-
-                # givens update
-                if abs(theta) > thresh
-                    repeat = true
-                    updates += 1
-                    c = cos(theta)
-                    s = sin(theta)
-                    G = [c -s ; s c]
-
-                    pair = [p , q]
-                    V[:,pair] = V[:,pair]*G
-                    CM[pair,:] = G' * CM[pair,:]
-                    all_indices = vcat(Ip, Iq)
-                    CM[:,all_indices] = [c*CM[:,Ip]+s*CM[:,Iq] -s*CM[:,Ip]+c*CM[:,Iq]]
-                end
-            end
-        end
-    end
-    return V
 end
 
 struct Jade
