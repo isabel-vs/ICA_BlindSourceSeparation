@@ -14,11 +14,11 @@ The used dataset is a set of cutaneous recordings of a potentially pregnant woma
 - **Description** https://ftp.esat.kuleuven.be/pub/SISTA/data/biomedical/foetal_ecg.txt
 
 \
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://github.com/isabel-vs/ICA_BlindSourceSeparation/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-pink.svg)](https://github.com/isabel-vs/ICA_BlindSourceSeparation/dev/)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://isabel-vs.github.io/ICA_BlindSourceSeparation.jl/)
+[![Dev](https://img.shields.io/badge/docs-dev-pink.svg)](https://isabel-vs.github.io/ICA_BlindSourceSeparation.jl/dev/)
 
-[![BuildStatus](https://github.com/ErikFelgendreher/ICA_BlindSourceSeparation.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/ErikFelgendreher/ICA_BlindSourceSeparation.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![BuildStatus](https://github.com/isabel-vs/ICA_BlindSourceSeparation.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/isabel-vs/ICA_BlindSourceSeparation.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
-[![Coverage](https://codecov.io/gh/ErikFelgendreher/ICA_BlindSourceSeparation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ErikFelgendreher/ICA_BlindSourceSeparation.jl)
+[![Coverage](https://codecov.io/gh/isabel-vs/ICA_BlindSourceSeparation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/isabel-vs/ICA_BlindSourceSeparation.jl)
 
 **Disclamer:** The JADE and Shibbs algorithms are adaptations from the JnS Matlab library from JF Cardoso.
