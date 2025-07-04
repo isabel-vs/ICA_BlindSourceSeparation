@@ -1,4 +1,5 @@
 using LinearAlgebra
+using Printf
 
 function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
@@ -11,48 +12,36 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
     y_list = Vector{Matrix{Float64}}()
     r_list = Vector{Float64}()
 
-    #signs = ones(N)
     current_loss = Inf
-    #requested_tolerance = false
     sign_change = false
 
-    old_signs = copy(signs)
-    G_old = zeros(N, N)
-    direction = zeros(N, N)
+    for n in 1:maxiter
+        psiY = score(Y)
+        psidY_mean = score_der(psiY)
+        g = gradient(Y, psiY)
 
-    for n in 1:max_iter
-        psiY       = tanh.(Y)
-        psidY_mean = mean(1 .- psiY.^2, dims=1)[:]
-        g          = psiY' * Y / T
-
-        K     = psidY_mean .* diag(g)
+        K = psidY_mean .- diag(g)
         signs = sign.(K)
         if n > 1
             sign_change = any(signs .!= old_signs)
         end
         old_signs = signs
 
-        g .*= reshape(signs, N, 1)
+        g = Diagonal(signs) * g
         psidY_mean .*= signs
 
         G = (g - g') / 2
 
-        diagonal = psidY_mean * ones(1, N)
-        off_diag  = diag(g) * ones(1, N)
-        h         = 0.5 .* (diagonal .+ diagonal' .- off_diag .- off_diag')
-        h = regularize_hessian(h, lambda_min)
-
         gradient_norm = maximum(abs.(G))
         if gradient_norm < tol
-            requested_tolerance = true
             break
         end
 
         if n > 1
             push!(s_list, direction)
-            ΔG = G .- G_old
-            push!(y_list, ΔG)
-            push!(r_list, 1.0 / sum(direction .* ΔG))
+            y = G .- G_old
+            push!(y_list, y)
+            push!(r_list, 1.0 / sum(direction .* y))
             if length(s_list) > m
                 popfirst!(s_list)
                 popfirst!(y_list)
@@ -62,33 +51,33 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
         G_old = copy(G)
 
         if sign_change
-            current_loss = nothing
+            current_loss = Inf
             empty!(s_list)
             empty!(y_list)
             empty!(r_list)
         end
 
-        direction = l_bfgs_direction(G, h, s_list, y_list, r_list, true)
+        h = proj_hessian_approx(Y, psidY_mean, g)
+        h = regularize_hessian(h, lambda_min)
 
-        converged, Y_new, W_new, new_loss, direction =
-            line_search(Y, W, log_lik_tanh, direction, signs, current_loss;
-                        ls_tries=ls_tries, verbose=verbose, ortho=true, extended=false)
+        direction = l_bfgs_direction(G, h, s_list, y_list, r_list)
+
+        converged, new_Y, new_loss, alpha = line_search(Y, direction, signs, current_loss; ls_tries=ls_tries)
         if !converged
-            direction .= -G
+            direction = -G
             empty!(s_list)
             empty!(y_list)
             empty!(r_list)
-            _, Y_new, W_new, new_loss, direction =
-                line_search(Y, W, log_lik_tanh, direction, signs, current_loss;
-                            ls_tries=10, verbose=false, ortho=true, extended=false)
+            _, new_Y, new_loss, alpha = line_search(Y, direction, signs, current_loss; ls_tries=ls_tries)
         end
 
-        Y = Y_new
-        W = expm(direction) * W
+        direction .*= alpha
+        Y = new_Y
+        W = exp(direction) * W
         current_loss = new_loss
 
         if verbose
-            println("iteration $(n), gradient norm = $(gradient_norm), loss = $(current_loss)")
+            @printf("iteration %d, gradient norm = %.4g\n", n, gradient_norm)
         end
     end
 
@@ -96,7 +85,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
 end
 
 """
-    core(Y::AbstractArray{<:Real})
+    score(Y::AbstractArray{<:Real})
     applies the hyperbolic tangent elementwise to each entry of `Y`.
     # Arguments
     - `Y::AbstractArray{<:Real}`: input array (vector, matrix, or higher‑dimensional array) of real numbers.
@@ -108,7 +97,7 @@ function score(Y::AbstractArray{<:Real})
 end
 
 """
-    core_der(psiY::AbstractMatrix{<:Real})
+    score_der(psiY::AbstractMatrix{<:Real})
     computes the average derivative of the hyperbolic tangent nonlinearity for each row of `psiY`.
     # Arguments
     - `psiY::AbstractMatrix{<:Real}`: input array of size `N×T`, where each row is a signal component over `T` observations.
@@ -267,6 +256,20 @@ function line_search(Y, direction, signs, current_loss; ls_tries)
 end
 
 struct Picard
+    m::Int
+    maxiter::Int
+    tol::Real
+    lambda_min::Real
+    ls_tries::Int
+    verbose::Bool
 end
 
-perform_separation(dataset, algo::Picard) = ica_picard(dataset)
+perform_separation(dataset, algo::Picard) = ica_picard(
+    dataset,
+    algo.m,
+    algo.maxiter,
+    algo.tol,
+    algo.lambda_min,
+    algo.ls_tries;
+    verbose = algo.verbose
+    )
