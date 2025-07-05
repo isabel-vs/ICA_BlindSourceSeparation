@@ -8,22 +8,26 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
     W = Matrix{Float64}(I, N, N)
     Y = copy(X)
 
+    # vectors for L-BFGS
     s_list = Vector{Matrix{Float64}}()
     y_list = Vector{Matrix{Float64}}()
     r_list = Vector{Float64}()
 
     current_loss = Inf
-    sign_change = false
+    sign_change = false # whether signs flipped in current iteration
 
     for n in 1:maxiter
+
+        # score function and derivative
         psiY = score(Y)
         psidY_mean = score_der(psiY)
+
         g = gradient(Y, psiY)
 
         K = psidY_mean .- diag(g)
         signs = sign.(K)
         if n > 1
-            sign_change = any(signs .!= old_signs)
+            sign_change = any(signs .!= old_signs) # sign flip
         end
         old_signs = signs
 
@@ -37,6 +41,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
             break
         end
 
+        # update the L-BFGS memory
         if n > 1
             push!(s_list, direction)
             y = G .- G_old
@@ -50,6 +55,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
         end
         G_old = copy(G)
 
+        # flush the memory if there is a sign change
         if sign_change
             current_loss = Inf
             empty!(s_list)
@@ -57,9 +63,11 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
             empty!(r_list)
         end
 
+        # hssian approximation
         h = proj_hessian_approx(Y, psidY_mean, g)
         h = regularize_hessian(h, lambda_min)
 
+        # find the L-BFGS direction
         direction = l_bfgs_direction(G, h, s_list, y_list, r_list)
 
         converged, new_Y, new_loss, alpha = line_search(Y, direction, signs, current_loss; ls_tries=ls_tries)
@@ -86,11 +94,14 @@ end
 
 """
     score(Y::AbstractArray{<:Real})
-    applies the hyperbolic tangent elementwise to each entry of `Y`.
-    # Arguments
-    - `Y::AbstractArray{<:Real}`: input array (vector, matrix, or higher‑dimensional array) of real numbers.
-    # Returns
-    - an array with the same shape as `Y`, where each element is `tanh(y)`.
+
+Apply the hyperbolic tangent elementwise to each entry of `Y`.
+
+ # Arguments
+ - `Y::AbstractArray{<:Real}`: input array (vector, matrix, or higher‑dimensional array) of real numbers.
+
+ # Returns
+ - an array with the same shape as `Y`, where each element is `tanh(y)`.
 """
 function score(Y::AbstractArray{<:Real})
     return tanh.(Y)
@@ -98,24 +109,30 @@ end
 
 """
     score_der(psiY::AbstractMatrix{<:Real})
-    computes the average derivative of the hyperbolic tangent nonlinearity for each row of `psiY`.
-    # Arguments
-    - `psiY::AbstractMatrix{<:Real}`: input array of size `N×T`, where each row is a signal component over `T` observations.
-    # Returns
-    - an `N×1` array in which each entry  represents the average derivative of the `tanh` nonlinearity, evaluated at each value in the corresponding row of `psiY`.
+
+ Computes the average derivative of the hyperbolic tangent nonlinearity for each row of `psiY`.
+   
+ # Arguments
+ - `psiY::AbstractMatrix{<:Real}`: input array of size `N×T`, where each row is a signal component over `T` observations.
+
+ # Returns
+ - a vebtor in which each entry  represents the average derivative of the `tanh` nonlinearity, evaluated at each value in the corresponding row of `psiY`.
 """
 function score_der(psiY::AbstractMatrix{<:Real})
-    return -mean(psiY .^ 2, dims=2) .+ 1.0
+    return vec(1 .- mean(psiY .^ 2, dims=2))
 end
 
 """
     gradient(Y, psiY)
-    computes the gradient of the contrast function with respect to the input signals.
-    # Arguments
-    - `Y::AbstractMatrix{<:Real}`: an `N×T` matrix where each row is a signal component over `T` samples.
-    - `psiY::AbstractMatrix{<:Real}`: the elementwise derivative of the contrast function, same size as `Y`.
-    # Returns
-    - An `N×N` matrix representing the relative gradient
+    
+Compute the gradient of the contrast function with respect to the input signals.
+    
+# Arguments
+- `Y::AbstractMatrix{<:Real}`: an `N×T` matrix where each row is a signal component over `T` samples.
+- `psiY::AbstractMatrix{<:Real}`: the elementwise derivative of the contrast function, same size as `Y`.
+    
+# Returns
+- An `N×N` matrix representing the relative gradient
 """
 function gradient(Y::AbstractMatrix{<:Real}, psiY::AbstractMatrix{<:Real})
     T = size(Y, 2)
@@ -124,13 +141,16 @@ end
 
 """
     proj_hessian_approx(Y, psidY_mean, G)
-    computes an approximation of the projected Hessian matrix.
-    # Arguments
-    - `Y::AbstractMatrix{<:Real}`: an `N×T` matrix of current signal components.
-    - `psidY_mean::AbstractVector{<:Real}`: a length-`N` vector containing the average of the second derivative (or negative squared derivative) of the contrast function for each component.
-    - `G::AbstractMatrix{<:Real}`: the gradient matrix of size `N×N`.
-    # Returns
-    - An `N×N` symmetric matrix approximating the projected Hessian.
+
+Compute an approximation of the projected Hessian matrix.
+
+# Arguments
+- `Y::AbstractMatrix{<:Real}`: an `N×T` matrix of current signal components.
+- `psidY_mean::AbstractVector{<:Real}`: a length-`N` vector containing the average of the second derivative (or negative squared derivative) of the contrast function for each component.
+- `G::AbstractMatrix{<:Real}`: the gradient matrix of size `N×N`.
+
+# Returns
+- An `N×N` symmetric matrix approximating the projected Hessian.
 """
 function proj_hessian_approx(Y::AbstractMatrix{<:Real}, psidY_mean::AbstractVector{<:Real}, G::AbstractMatrix{<:Real})
     N = size(Y, 1)
@@ -142,12 +162,15 @@ end
 
 """
     regularize_hessian(h, lambda_min)
-    clips the diagonal values of the Hessian approximation from below, ensuring all values are at least `lambda_min`.
-    # Arguments
-    - `h::AbstractMatrix{<:Real}`: a diagonal matrix, where diagonal elements approximate eigenvalues.
-    - `lambda_min::Real`: minimum allowed eigenvalue
-    # Returns
-    - A matrix of the same size as `h`, with all values less than `lambda_min` replaced by `lambda_min`
+    
+Clip the diagonal values of the Hessian approximation from below, ensuring all values are at least `lambda_min`.
+    
+# Arguments
+- `h::AbstractMatrix{<:Real}`: a diagonal matrix, where diagonal elements approximate eigenvalues.
+- `lambda_min::Real`: minimum allowed eigenvalue
+    
+# Returns
+- A matrix of the same size as `h`, with all values less than `lambda_min` replaced by `lambda_min`
 """
 function regularize_hessian(h::AbstractMatrix{<:Real}, lambda_min::Real)
     return max.(h, lambda_min)
@@ -155,25 +178,31 @@ end
 
 """
     solve_hessian(G, h)
-    computes the product of the inverse Hessian approximation with the gradient.
-    # Arguments
-    - `G::AbstractMatrix{<:Real}`: the gradient matrix.
-    - `h::AbstractMatrix{<:Real}`: diagonal approximation of the Hessian.
-    # Returns
-    - A matrix of same size as `G`, where each element is `G[i,j] / h[i,j]`.
+    
+Compute the product of the inverse Hessian approximation with the gradient.
+    
+# Arguments
+- `G::AbstractMatrix{<:Real}`: the gradient matrix.
+- `h::AbstractMatrix{<:Real}`: diagonal approximation of the Hessian.
+    
+# Returns
+- A matrix of same size as `G`, where each element is `G[i,j] / h[i,j]`.
 """
-function solve_hessian(G, h)
+function solve_hessian(G::AbstractMatrix{<:Real}, h::AbstractMatrix{<:Real})
     return G ./ h
 end
 
 """
     loss(Y, signs)
-    computes the total loss for a set of signals.
-    # Arguments
-    - `Y::AbstractMatrix{<:Real}`: matrix of shape `N×T`, where each row is a signal component over `T` samples.
-    - `signs::AbstractMatrix{<:Real}`: matrix of the same shape as `Y`, containing signs or weights for each signal value.
-    # Returns
-    - A scalar representing the average contrast-based loss across all components and time steps.
+
+Compute the total loss for a set of signals.
+    
+# Arguments
+- `Y::AbstractMatrix{<:Real}`: matrix of shape `N×T`, where each row is a signal component over `T` samples.
+- `signs::AbstractMatrix{<:Real}`: matrix of the same shape as `Y`, containing signs or weights for each signal value.
+    
+# Returns
+- A scalar representing the average contrast-based loss across all components and time steps.
 """
 function loss(Y, signs)
     N, T = size(Y)
@@ -189,15 +218,18 @@ end
 
 """
     l_bfgs_direction(G, h, s_list, y_list, r_list)
-    computes a search direction using the limited-memory BFGS (L-BFGS) algorithm.
-    # Arguments
-    - `G::AbstractVector{<:Real}`: the current gradient.
-    - `h::AbstractVector{<:Real}`: a diagonal approximation to the Hessian.
-    - `s_list::Vector{AbstractVector{<:Real}}`: list of previous update vectors.
-    - `y_list::Vector{AbstractVector{<:Real}}`: list of previous gradient differences.
-    - `r_list::Vector{Float64}`: list of scalars for each pair `(s, y)`.
-    # Returns
-    - the descent direction computed using the L-BFGS two-loop recursion.
+    
+Compute a search direction using the limited-memory BFGS (L-BFGS) algorithm.
+    
+# Arguments
+- `G::AbstractMatrix{<:Real}: the current gradient.
+- `h::AbstractMatrix{<:Real}`: a diagonal approximation to the Hessian.
+- `s_list::Vector{AbstractMatrix{<:Real}}`: list of previous update vectors.
+- `y_list::Vector{AbstractMatrix{<:Real}}`: list of previous gradient differences.
+- `r_list::Vector{Float64}`: list of scalars for each pair `(s, y)`.
+    
+# Returns
+- the descent direction computed using the L-BFGS two-loop recursion.
 """
 function l_bfgs_direction(G, h, s_list, y_list, r_list)
     q = copy(G)
@@ -225,19 +257,22 @@ end
 
 """
     function line_search(Y, direction, signs, current_loss; ls_tries)
-    Perform a backtracking line search using a matrix exponential update.
-    # Arguments
-    - `Y::AbstractMatrix{<:Real}`: current signal matrix (`N×T`).
-    - `direction::AbstractMatrix{<:Real}`: descent direction matrix of the same size as `Y`.
-    - `signs::AbstractMatrix{<:Real}`: sign weights for the loss, same size as `Y`.
-    - `current_loss::Real`: current loss value, or `Inf` to force recomputation.
-    - `ls_tries::Integer` (keyword): maximum number of backtracking steps.
-    # Returns
-    - A tuple `(converged, Y_new, new_loss, alpha)` where
-    - `converged::Bool` indicates whether a successful step was found,
-    - `Y_new::AbstractMatrix{<:Real}` is the updated signal matrix (or original if no step succeeded),
-    - `new_loss::Real` is the loss at `Y_new`,
-    - `alpha::Real` is the final step size.
+    
+Perform a backtracking line search using a matrix exponential update.
+    
+# Arguments
+- `Y::AbstractMatrix{<:Real}`: current signal matrix (`N×T`).
+- `direction::AbstractMatrix{<:Real}`: descent direction matrix of the same size as `Y`.
+- `signs::AbstractVector{<:Real}`: sign weights for the loss, same size as `Y`.
+- `current_loss::Real`: current loss value, or `Inf` to force recomputation.
+- `ls_tries::Integer` (keyword): maximum number of backtracking steps.
+    
+# Returns
+- A tuple `(converged, Y_new, new_loss, alpha)` where
+- `converged::Bool` indicates whether a successful step was found,
+- `Y_new::AbstractMatrix{<:Real}` is the updated signal matrix (or original if no step succeeded),
+- `new_loss::Real` is the loss at `Y_new`,
+- `alpha::Real` is the final step size.
 """
 function line_search(Y, direction, signs, current_loss; ls_tries)
     alpha = 1.0
