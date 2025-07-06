@@ -92,7 +92,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
         end
     end
 
-    return sensorData(dataset.time, transpose(Y))
+    return sensorData(dataset.time, Matrix(transpose(Y)))
 end
 
 """
