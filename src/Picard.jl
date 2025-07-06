@@ -5,7 +5,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
 
     X = transpose(dataset.data)
     N, T = size(X)
-    W = Matrix{Float64}(I, N, N)
+    W = Matrix{Float64}(I, N, N)    
     Y = copy(X)
 
     # vectors for L-BFGS
@@ -15,6 +15,8 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
 
     current_loss = Inf
     sign_change = false # whether signs flipped in current iteration
+    old_signs = zeros(Int, N)
+    G_old = zeros(N, N)
 
     for n in 1:maxiter
 
