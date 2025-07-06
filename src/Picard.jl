@@ -1,5 +1,5 @@
 using LinearAlgebra
-using Printf
+#using Printf
 
 function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
@@ -85,7 +85,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
         current_loss = new_loss
 
         if verbose
-            @printf("iteration %d, gradient norm = %.4g\n", n, gradient_norm)
+            println("iteration ", n, ", gradient norm = ", round(gradient_norm; sigdigits=4))
         end
     end
 
