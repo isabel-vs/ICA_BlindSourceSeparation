@@ -17,6 +17,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
     sign_change = false # whether signs flipped in current iteration
     old_signs = zeros(Int, N)
     G_old = zeros(N, N)
+    direction = zeros(N, N)
 
     for n in 1:maxiter
 
