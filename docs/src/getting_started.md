@@ -52,5 +52,5 @@ This example plots the original whitened data, as well as the results of Jade an
     plot_dataset(y)
 
     algo = Shibbs(size(x.data, 2))
-    z = perform_separation(x, algo)
+    z, _ = perform_separation(x, algo)
     plot_dataset(z)

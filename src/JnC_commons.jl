@@ -1,9 +1,9 @@
 """
-    joint_diagonalize(CM::AbstractMatrix, seuil::Float64)
+    joint_diagonalize(CM_in::AbstractMatrix, thresh::Real, max_iters::Integer)
 
 Returns diagonalization matrix and rotation size
 """
-function joint_diagonalize(CM_in::AbstractMatrix, thresh::Number, max_iters::Integer)
+function joint_diagonalize(CM_in::AbstractMatrix, thresh::Real, max_iters::Integer)
     CM = copy(CM_in)
     m, _ = size(CM)
     num_cumm = div(size(CM, 2), m)
