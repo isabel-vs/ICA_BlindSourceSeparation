@@ -51,7 +51,7 @@ using LinearAlgebra: I
     # Shibbs
     path = joinpath(root, "data", "foetal_ecg.dat")
     x = read_dataset(path)
-    algo = Shibbs(2)
+    algo = Shibbs(2, 1000)
     x, _ = perform_separation(x, algo)
     n, m = size(x.data)
     @test (n == 2500) && (m == 2)

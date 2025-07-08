@@ -25,7 +25,7 @@ Prepare JADE algorithm
 
 Prepare Shibbs algorithm
 
-    algo = Shibbs(size(x.data, 2))
+    algo = Shibbs(2, 1000)
 
 Prepare Picard algorithm
 
@@ -51,6 +51,6 @@ This example plots the original whitened data, as well as the results of Jade an
     y = perform_separation(x, algo)
     plot_dataset(y)
 
-    algo = Shibbs(size(x.data, 2))
+    algo = Shibbs(2, 1000)
     z, _ = perform_separation(x, algo)
     plot_dataset(z)
