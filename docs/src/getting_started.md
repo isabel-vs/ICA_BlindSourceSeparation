@@ -29,7 +29,7 @@ Prepare Shibbs algorithm
 
 Prepare Picard algorithm
 
-    algo = Picard()
+    algo = Picard(3, 200, 1e-6, 1e-2, 10, true)
 
 Run source separation
 
