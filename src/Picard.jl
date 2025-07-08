@@ -1,6 +1,32 @@
 using LinearAlgebra
 #using Printf
 
+#=------------------------------------------------------------
+Picard algorithm.
+Performs blind source separation using contrast function optimization with L-BFGS.
+Author: Mihail Todorov
+Adapted from Pierre Ablin, Jean-François Cardoso, Alexandre Gramfort's MATLAB version
+=------------------------------------------------------------=#
+
+"""
+    ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
+
+Perform Independent Component Analysis (ICA) using the Picard algorithm with limited-memory BFGS optimization.
+
+# Arguments
+- `dataset::sensorData`
+- `m::Int`: Size of L-BFGS's memory. Typical values are in the range 3-15
+- `maxiter::Int`: Maximal number of iterations
+- `tol::real`: tolerance for the stopping criterion. 
+    Iterations stop when the norm of the projected gradient gets smaller than tol.
+- `lambda_min::Real`: Minimum eigenvalue for regularizing the Hessian approximation.
+- `ls_tries::Int`: Number of tries allowed for the backtracking line-search.
+    When that number is exceeded, the direction is thrown away and the gradient is used instead.
+- `verbose::Bool=false`: If true, prints the informations about the algorithm.
+
+# Returns
+- `sensorData`: A new `sensorData` object containing the unmixed data.
+"""
 function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
     X = transpose(dataset.data) # transposed data part of the dataset
