@@ -24,8 +24,10 @@ X = (A * S_true)'
 
 mixed = sensorData(time, X)
 
-separated, S = perform_separation(mixed, Jade(2))
+separated, V = perform_separation(mixed, Jade(2))
 
-# p1 = plot(time, S_true', title="Original Sources (S)", label=["Sine" "Square"], lw=2)
-# p2 = plot(time, X, title="Mixed Signals (X)", label=["Mixture 1" "Mixture 2"], lw=2)
+p1 = plot(time, S_true', title="Original Sources (S)", label=["Sine" "Square"], lw=2)
+p2 = plot(time, X, title="Mixed Signals (X)", label=["Mixture 1" "Mixture 2"], lw=2)
 p3 = plot(time, separated.data, title="Recovered Signals (Y)", label=["Estimate 1" "Estimate 2"], lw=2)
+
+plot(p1, p2, p3, layout=(3, 1), size=(800, 600), legend=:outertopright)

@@ -14,43 +14,18 @@ N: number of sensors
 Returns the whitened dataset.
 """
 function whiten_dataset(dataset::sensorData)
-    n_rows, n_cols = size(dataset.data)
-    if (length(dataset.time) != n_rows)
-        throw("Mismatch between time length and signal lengths")
-    end
-    if (n_cols == 0)
-        throw("Matrix must have at least two column.")
-    end
 
-    # Copy to avoid modifying the original matrix
-    X = deepcopy(dataset.data)
-    T = size(X,1)
+    n = size(dataset.data,2)
 
-    # center matrix
-    μ = mean(X, dims=1)
-    X_centered = X .- μ
+    data_white, _, _ = whiten_dataset(dataset, n)
 
-    # calculate sample covariance matrix (NxN)
-    Σ = cov(X, dims=1, corrected=false)
-
-    # eigendecomposition of Σ
-    eigenvals, U = eigen(Σ)
-    
-    # calculate whitening matrix
-    W = Diagonal(1 ./sqrt.(eigenvals)) * U'
-
-    data_white = X_centered * W'
-
-    return sensorData(dataset.time, data_white)
+    return data_white
 end
 """
     whiten_dataset(X::sensorData, m::Integer)
 
-Applies PCA whitening to TxN data matrix to decorrelate m sources.
-T: number of samples
-n: number of sensors
-m: number of sources
-Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
+Applies PCA whitening to a dataset, reducing its dimensionality to m components.
+Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
 function whiten_dataset(dataset::sensorData, m::Integer)
     

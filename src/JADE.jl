@@ -8,8 +8,7 @@ Adapted from Jean-François Cardoso's MATLAB version
     ica_jade(dataset::sensorData, m::Integer)
 
 Separates m mixed sources with JADE algorithm.
-
-Whitens data, estimates cumulants and performs joint diagonalization.
+Returns separated sources and transformation matrix V.
 
 See also [`whiten_dataset`](@ref), [`estimate_cumulants`](@ref), [`joint_diagonalize`](@ref)
 """
@@ -32,7 +31,7 @@ function ica_jade(dataset::sensorData, m::Integer)
 
     #TODO: order according to "most energetically significant" (as in matlab code)
 
-    return sensorData(dataset.time, S)
+    return sensorData(dataset.time, S), V
 end
 
 """
