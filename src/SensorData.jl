@@ -1,14 +1,14 @@
 struct sensorData{T<:Real}
     # Vector of size C containing timestamps
-    time::Vector{T}
+    time::AbstractVector{T}
     # CxN Matrix containing data of N sensors corresponding to timestamps. 
-    data::Matrix{T}
+    data::AbstractMatrix{T}
 end
 
 """
     whiten_dataset(X::sensorData)
 
-Applies PCA whitening to TxN data matrix
+Applies PCA whitening to TxN data matrix.
 T: number of samples
 N: number of sensors
 Returns the whitened dataset.
@@ -44,22 +44,22 @@ function whiten_dataset(dataset::sensorData)
     return sensorData(dataset.time, data_white)
 end
 """
-    whiten_dataset(X::sensorData, m::Int64) -> sensorData, W::Matrix{Float64}, iW::Matrix{Float64}
+    whiten_dataset(X::sensorData, m::Integer)
 
-Applies PCA whitening to TxN data matrix to decorrelate m sources
+Applies PCA whitening to TxN data matrix to decorrelate m sources.
 T: number of samples
 n: number of sensors
 m: number of sources
 Returns the whitened dataset (Txm data matrix), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
-function whiten_dataset(dataset::sensorData, m::Int64)
+function whiten_dataset(dataset::sensorData, m::Integer)
     
     n_rows, n_cols = size(dataset.data)
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
     end
     if (n_cols == 0)
-        throw("Matrix must have at least two column.")
+        throw("Matrix must have at least two columns.")
     end
     
     # Copy to avoid modifying the original matrix

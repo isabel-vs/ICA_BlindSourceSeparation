@@ -11,6 +11,6 @@ include("Shibbs.jl")
 include("Picard.jl")
 include("JADE.jl")
 
-export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, Jade, Picard, Shibbs
+export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, Jade, Picard, Shibbs, sensorData
 
 end

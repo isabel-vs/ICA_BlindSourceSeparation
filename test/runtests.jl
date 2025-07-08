@@ -30,11 +30,15 @@ using LinearAlgebra: I
     path = joinpath(root, "data", "with_comments.dat")
     test_val = true
     try
-        read_dataset(path)
+        test_data = read_dataset(path).data
+        if test_data[3,2] != 0.5404
+            test_val = false
+        end        
     catch
         test_val = false
     end
     @test test_val
     
     # testidea: all algorithms should create roughly the same output
+
 end
