@@ -29,7 +29,7 @@ Prepare Shibbs algorithm
 
 Prepare Picard algorithm
 
-    algo = Picard()
+    algo = Picard(3, 200, 1e-6, 1e-2, 10, true)
 
 Run source separation
 
@@ -41,7 +41,7 @@ Plot again
 
 ### Complete example:
 
-This example plots the original whitened data, as well as the results of Jade and Shibbs algorithm.
+This example plots the original whitened data, as well as the results of Jade, Shibbs and Picard algorithm.
 
     x = read_dataset("data/foetal_ecg.dat")
     x = whiten_dataset(x)
@@ -54,3 +54,7 @@ This example plots the original whitened data, as well as the results of Jade an
     algo = Shibbs(2, 1000)
     z, _ = perform_separation(x, algo)
     plot_dataset(z)
+
+    algo = Picard(3, 200, 1e-6, 1e-2, 10, true)
+    r = perform_separation(x, algo)
+    plot_dataset(r)
