@@ -52,7 +52,7 @@ function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
     OneMoreStep = true
     nSteps = 0
     while OneMoreStep && nSteps < maxSteps
-        println("$nSteps")
+        # println("$nSteps")
         nSteps += 1
         # Estimate cumulants
         CM = estimate_cumulants(X)
