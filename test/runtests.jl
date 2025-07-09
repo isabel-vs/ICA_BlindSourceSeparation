@@ -41,4 +41,32 @@ using LinearAlgebra: I
     
     # testidea: all algorithms should create roughly the same output
 
+
+    # other testidea: compare Jade and Shibbs result with C or Matlab result from JnS
+    # JADE
+    
+    path = joinpath(root, "data", "foetal_ecg.dat")
+    x = read_dataset(path)
+    algo = Jade(2)
+    x = perform_separation(x, algo)
+    n, m = size(x.data)
+    @test (n == 2500) && (m == 2)
+
+    # Shibbs
+    path = joinpath(root, "data", "foetal_ecg.dat")
+    x = read_dataset(path)
+    algo = Shibbs(2, 1000)
+    x, _ = perform_separation(x, algo)
+    n, m = size(x.data)
+    @test (n == 2500) && (m == 2)
+
+    # Picard
+    #=
+    path = joinpath(root, "data", "foetal_ecg.dat")
+    x = read_dataset(path)
+    algo = Picard(???)
+    x = perform_separation(x, algo)
+    n, m = size(x.data)
+    @test (n == 2500) && (m == 2)
+    =#
 end

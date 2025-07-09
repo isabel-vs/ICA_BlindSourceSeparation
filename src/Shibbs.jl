@@ -28,12 +28,12 @@ function estimate_cumulants(X::AbstractMatrix)
     return CM
 end
 """
-    ica_shibbs(dataset::sensorData, m::Integer)
+    ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
 
 Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
 Returns the dataset combined with transformation matrix as well as the transformation Matrix
 """
-function ica_shibbs(dataset::sensorData, m::Integer)
+function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
     d_white, B, iW = whiten_dataset(dataset, m)
     X = Matrix(d_white.data')
 
@@ -51,9 +51,8 @@ function ica_shibbs(dataset::sensorData, m::Integer)
     # === Outer loop ===
     OneMoreStep = true
     nSteps = 0
-    maxSteps = 1000
     while OneMoreStep && nSteps < maxSteps
-        println("$nSteps")
+        # println("$nSteps")
         nSteps += 1
         # Estimate cumulants
         CM = estimate_cumulants(X)
@@ -84,6 +83,7 @@ end
 
 struct Shibbs
     nSensors::Integer
+    maxSteps::Integer
 end
 
-perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors)
+perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors, algo.maxSteps)

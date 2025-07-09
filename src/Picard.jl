@@ -1,45 +1,76 @@
 using LinearAlgebra
 #using Printf
 
+#=------------------------------------------------------------
+Picard algorithm.
+Performs blind source separation using contrast function optimization with L-BFGS.
+Author: Mihail Todorov
+Adapted from Pierre Ablin, Jean-François Cardoso, Alexandre Gramfort's MATLAB version
+=------------------------------------------------------------=#
+
+"""
+    ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
+
+Perform Independent Component Analysis (ICA) using the Picard algorithm with limited-memory BFGS optimization.
+
+# Arguments
+- `dataset::sensorData`
+- `m::Int`: Size of L-BFGS's memory. Typical values are in the range 3-15
+- `maxiter::Int`: Maximal number of iterations
+- `tol::real`: tolerance for the stopping criterion. 
+    Iterations stop when the norm of the projected gradient gets smaller than tol.
+- `lambda_min::Real`: Minimum eigenvalue for regularizing the Hessian approximation.
+- `ls_tries::Int`: Number of tries allowed for the backtracking line-search.
+    When that number is exceeded, the direction is thrown away and the gradient is used instead.
+- `verbose::Bool=false`: If true, prints the informations about the algorithm.
+
+# Returns
+- `sensorData`: A new `sensorData` object containing the unmixed data.
+"""
 function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
-    X = transpose(dataset.data)
-    N, T = size(X)
-    W = Matrix{Float64}(I, N, N)    
-    Y = copy(X)
+    X = transpose(dataset.data) # transposed data part of the dataset
+    N, T = size(X) # saving the sizes, N rows for N signals, T columns for T points in time
+    W = Matrix{Float64}(I, N, N) # unmixing matrix, initialy identity matrix   
+    Y = copy(X) # copying the data
 
     # vectors for L-BFGS
-    s_list = Vector{Matrix{Float64}}()
-    y_list = Vector{Matrix{Float64}}()
-    r_list = Vector{Float64}()
+    s_list = Vector{Matrix{Float64}}() # stores weight updates
+    y_list = Vector{Matrix{Float64}}() # stores gradient updates
+    r_list = Vector{Float64}() # stores inverse curvature estimates
 
-    current_loss = Inf
-    sign_change = false # whether signs flipped in current iteration
+    current_loss = Inf # initial value for the loss
+    sign_change = false # whether any source signal changed sign in current iteration
+
+    # initializing variables used in the for-loop
     old_signs = zeros(Int, N)
     G_old = zeros(N, N)
     direction = zeros(N, N)
 
     for n in 1:maxiter
 
-        # score function and derivative
+        # score function and its average derivative
         psiY = score(Y)
         psidY_mean = score_der(psiY)
 
+        # gradient
         g = gradient(Y, psiY)
 
-        K = psidY_mean .- diag(g)
-        signs = sign.(K)
+        K = psidY_mean .- diag(g) # curvature approximation
+        signs = sign.(K) # extracting signs
         if n > 1
             sign_change = any(signs .!= old_signs) # sign flip
         end
-        old_signs = signs
+        old_signs = signs # store signs for next iteration
 
-        g = Diagonal(signs) * g
-        psidY_mean .*= signs
+        g = Diagonal(signs) * g # update gradient
+        psidY_mean .*= signs # update derivative
 
-        G = (g - g') / 2
+        G = (g - g') / 2 # compute gradient matrix
 
         gradient_norm = maximum(abs.(G))
+
+        # Stop if the gradient norm is below the convergence threshold
         if gradient_norm < tol
             break
         end
@@ -56,7 +87,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
                 popfirst!(r_list)
             end
         end
-        G_old = copy(G)
+        G_old = copy(G) # Save current G for the next iteration
 
         # flush the memory if there is a sign change
         if sign_change
@@ -73,20 +104,25 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
         # find the L-BFGS direction
         direction = l_bfgs_direction(G, h, s_list, y_list, r_list)
 
+        # Perform line search along the computed direction
         converged, new_Y, new_loss, alpha = line_search(Y, direction, signs, current_loss; ls_tries=ls_tries)
+
+        # If line search fails, reset direction to steepest descent and flush memory
         if !converged
             direction = -G
             empty!(s_list)
             empty!(y_list)
             empty!(r_list)
+            # Retry line search with steepest descent:
             _, new_Y, new_loss, alpha = line_search(Y, direction, signs, current_loss; ls_tries=ls_tries)
         end
 
-        direction .*= alpha
-        Y = new_Y
-        W = exp(direction) * W
+        direction .*= alpha # Scale update direction
+        Y = new_Y 
+        W = exp(direction) * W # Update unmixing matrix
         current_loss = new_loss
 
+        # Optionally print progress
         if verbose
             println("iteration ", n, ", gradient norm = ", round(gradient_norm; sigdigits=4))
         end
