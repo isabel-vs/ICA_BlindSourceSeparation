@@ -1,9 +1,10 @@
+
 struct sensorData{
     T_time <: AbstractVector{<:Real},
     T_data <: AbstractMatrix{<:Real}
 }
-    time::T_time
-    data::T_data
+    time::T_time  # Vector of size C containing timestamps
+    data::T_data  # CxN Matrix containing data of N sensors corresponding to timestamps.
 end
 
 """
@@ -23,7 +24,7 @@ function whiten_dataset(dataset::sensorData)
     return data_white
 end
 """
-    whiten_dataset(X::sensorData, m::Integer)
+    whiten_dataset(X::sensorData, m::Int)
 
 Applies PCA whitening to a dataset, reducing its dimensionality to m components.
 Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
