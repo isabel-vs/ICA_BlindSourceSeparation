@@ -1,8 +1,10 @@
-struct sensorData{T<:Real}
-    # Vector of size C containing timestamps
-    time::AbstractVector{T}
-    # CxN Matrix containing data of N sensors corresponding to timestamps. 
-    data::AbstractMatrix{T}
+
+struct sensorData{
+    T_time <: AbstractVector{<:Real},
+    T_data <: AbstractMatrix{<:Real}
+}
+    time::T_time  # Vector of size C containing timestamps
+    data::T_data  # CxN Matrix containing data of N sensors corresponding to timestamps.
 end
 
 """
@@ -22,12 +24,12 @@ function whiten_dataset(dataset::sensorData)
     return data_white
 end
 """
-    whiten_dataset(X::sensorData, m::Integer)
+    whiten_dataset(X::sensorData, m::Int)
 
 Applies PCA whitening to a dataset, reducing its dimensionality to m components.
 Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
-function whiten_dataset(dataset::sensorData, m::Integer)
+function whiten_dataset(dataset::sensorData, m::Int)
     
     n_rows, n_cols = size(dataset.data)
     if (length(dataset.time) != n_rows)
@@ -54,7 +56,7 @@ function whiten_dataset(dataset::sensorData, m::Integer)
     Σ = cov(X_centered, dims=1, corrected=false)
 
     # eigendecomposition of Σ
-    eigenvals, U = eigen(Σ)
+    eigenvals, U = eigen(Symmetric(Σ))
 
     # select m largest eigenvalues
     rangeW = n-m+1:n

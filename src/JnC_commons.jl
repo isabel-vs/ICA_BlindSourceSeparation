@@ -1,4 +1,25 @@
 """
+    estimate_cumulants(X::AbstractMatrix)
+
+Returns cumulant matrix.
+"""
+function estimate_cumulants(X::AbstractMatrix)
+    m, T = size(X)
+    nbcm = m
+    CM = zeros(m, m * nbcm)
+    R = I(m)
+
+    for k in 1:m
+        xk = X[k, :]
+        Xk = X .* xk'
+        Rk = Xk * Xk' / T - R
+        Rk[k, k] -= 2
+        CM[:, ((k - 1) * m + 1):(k * m)] .= Rk
+    end
+
+    return CM
+end
+"""
     joint_diagonalize(CM_in::AbstractMatrix, thresh::Real, max_iters::Integer)
 
 Returns diagonalization matrix and rotation size
