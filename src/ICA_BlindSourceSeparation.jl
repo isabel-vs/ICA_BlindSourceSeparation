@@ -11,6 +11,12 @@ include("Shibbs.jl")
 include("Picard.jl")
 include("JADE.jl")
 
-export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, Jade, Picard, Shibbs, sensorData
+function profile_test(x,n)
+    for i = 1:n
+        whiten_dataset(x)
+    end
+end
+
+export read_dataset, whiten_dataset, plot_dataset, demo, perform_separation, Jade, Picard, Shibbs, sensorData, profile_test
 
 end
