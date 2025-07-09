@@ -5,7 +5,12 @@ Author: Isabel von Stebut
 Adapted from Jean-François Cardoso's MATLAB version
 =------------------------------------------------------------=#
 """
-    JADE Algorithm for ICA source separation
+    ica_jade(dataset::sensorData, m::Integer)
+
+Separates m mixed sources with JADE algorithm.
+Returns separated sources and transformation matrix V.
+
+See also [`whiten_dataset`](@ref), [`estimate_cumulants`](@ref), [`joint_diagonalize`](@ref)
 """
 function ica_jade(dataset::sensorData, m::Integer)
 
@@ -22,22 +27,23 @@ function ica_jade(dataset::sensorData, m::Integer)
 
     # source estimation
     X_white = d_white.data
-    S = X_white * V     #TODO: check if correct? maybe transpose?
+    S = X_white * V
 
     #TODO: order according to "most energetically significant" (as in matlab code)
 
-    return sensorData(dataset.time, S)
+    return sensorData(dataset.time, S), V
 end
 
 """
-    Estimation of cumulant matrices
+    estimate_cumulants(dataset::sensorData, m::Integer)
+
+Estimates cumulant matrices.
 """
 function estimate_cumulants(dataset::sensorData, m::Integer)
     X = (dataset.data)'
     T = size(X,2)
 
-    dimsymm = (m*(m+1))÷2   # Dimension of space of real symm. matrices
-    num_cumm = dimsymm      # TODO: skip??
+    num_cumm = (m*(m+1))÷2      # Dimension of space of real symm. matrices
     CM = zeros(m, m*num_cumm)   # storage for cumulant matrices
     R = I(m)
     scale = ones(m)/T

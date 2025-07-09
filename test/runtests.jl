@@ -30,7 +30,10 @@ using LinearAlgebra: I
     path = joinpath(root, "data", "with_comments.dat")
     test_val = true
     try
-        read_dataset(path)
+        test_data = read_dataset(path).data
+        if test_data[3,2] != 0.5404
+            test_val = false
+        end        
     catch
         test_val = false
     end
@@ -38,13 +41,14 @@ using LinearAlgebra: I
     
     # testidea: all algorithms should create roughly the same output
 
+
     # other testidea: compare Jade and Shibbs result with C or Matlab result from JnS
     # JADE
     
     path = joinpath(root, "data", "foetal_ecg.dat")
     x = read_dataset(path)
     algo = Jade(2)
-    x = perform_separation(x, algo)
+    x, _ = perform_separation(x, algo)
     n, m = size(x.data)
     @test (n == 2500) && (m == 2)
 
