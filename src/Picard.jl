@@ -94,8 +94,8 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
             empty!(r_list)
         end
 
-        # hssian approximation
-        h = proj_hessian_approx(Y, psidY_mean, g)
+        # hessian approximation
+        h = proj_hessian_approx(Y, psidY_mean, G)
         h = regularize_hessian(h, lambda_min)
 
         # find the L-BFGS direction
@@ -189,9 +189,11 @@ Compute an approximation of the projected Hessian matrix.
 - An `N×N` symmetric matrix approximating the projected Hessian.
 """
 function proj_hessian_approx(Y::AbstractMatrix{<:Real}, psidY_mean::AbstractVector{<:Real}, G::AbstractMatrix{<:Real})
-    N = size(Y, 1)
-    diagonal = psidY_mean * ones(1, N)
-    off_diag  = repeat(diag(G), 1, N)
+    N = size(Y, 1) # Number of signals
+    diagonal = psidY_mean * ones(1, N) # A matrix where each row is the psidY_mean vector
+    off_diag  = repeat(diag(G), 1, N) # Extract diagonal of gradient G and replicate it across columns
+    # Compute symmetric approximation of the projected Hessian
+    # Formula: H = 0.5 * (ψ_i + ψ_j - g_i - g_j) for each (i,j)
     hess = 0.5 * (diagonal + transpose(diagonal) - off_diag - transpose(off_diag))
     return hess
 end
@@ -244,10 +246,10 @@ function loss(Y, signs)
     N, T = size(Y)
     total = 0.0
     for i in 1:N
-        y = Y[i, :]
-        s = signs[i, :]
-        term = abs.(y) .+ log1p.(exp.(-2 .* abs.(y)))
-        total += sum(s .* term) / T
+        y = Y[i, :] # Extract i-th signal row
+        s = signs[i, :] # Corresponding sign/weight row
+        term = abs.(y) .+ log1p.(exp.(-2 .* abs.(y))) # A smooth approximation of the element-wise loss
+        total += sum(s .* term) / T # Weighted average loss for this component
     end
     return total
 end
@@ -268,10 +270,10 @@ Compute a search direction using the limited-memory BFGS (L-BFGS) algorithm.
 - the descent direction computed using the L-BFGS two-loop recursion.
 """
 function l_bfgs_direction(G, h, s_list, y_list, r_list)
-    q = copy(G)
+    q = copy(G) # Initialize q with the current gradient
     a_list = Vector{Float64}()
     m = length(s_list)
-    for i in m:-1:1
+    for i in m:-1:1 # apply the inverse Hessian approximation from most recent to oldest
         s = s_list[i]
         y = y_list[i]
         r = r_list[i]
@@ -280,7 +282,7 @@ function l_bfgs_direction(G, h, s_list, y_list, r_list)
         q .-= alpha .* y
     end
     z = solve_hessian(q, h)
-    for i in 1:m
+    for i in 1:m # refine using older updates in forward order
         s = s_list[i]
         y = y_list[i]
         r = r_list[i]
@@ -311,17 +313,17 @@ Perform a backtracking line search using a matrix exponential update.
 - `alpha::Real` is the final step size.
 """
 function line_search(Y, direction, signs, current_loss; ls_tries)
-    alpha = 1.0
-    loss0 = isfinite(current_loss) ? current_loss : loss(Y, signs)
-    Y_new = Y
+    alpha = 1.0 # initial step size
+    loss0 = isfinite(current_loss) ? current_loss : loss(Y, signs) # compute current loss
+    Y_new = Y 
     new_loss = loss0
     for _ in 1:ls_tries
-        Y_candidate = exp(alpha * direction) * Y
-        cand_loss = loss(Y_candidate, signs)
-        if cand_loss < loss0
+        Y_candidate = exp(alpha * direction) * Y # propose new Y
+        cand_loss = loss(Y_candidate, signs) # evaluate the loss
+        if cand_loss < loss0 
             return true, Y_candidate, cand_loss, alpha
         end
-        alpha /= 2
+        alpha /= 2 # if candidate loss in not a solution, reduce step size
     end
     return false, Y_new, new_loss, alpha
 end
