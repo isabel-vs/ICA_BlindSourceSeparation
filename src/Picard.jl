@@ -1,6 +1,3 @@
-using LinearAlgebra
-#using Printf
-
 #=------------------------------------------------------------
 Picard algorithm.
 Performs blind source separation using contrast function optimization with L-BFGS.
