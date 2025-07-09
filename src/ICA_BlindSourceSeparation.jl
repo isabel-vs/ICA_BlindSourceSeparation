@@ -2,7 +2,7 @@ module ICA_BlindSourceSeparation
 
 using Plots: plot, plot!, display
 
-using LinearAlgebra: eigen, I, sqrt, pinv, Diagonal
+using LinearAlgebra: eigen, I, sqrt, pinv, Diagonal, Symmetric
 using Statistics: cov, mean, norm
 
 include("SensorData.jl")
@@ -13,7 +13,8 @@ include("JADE.jl")
 
 function profile_test(x,n)
     for i = 1:n
-        whiten_dataset(x)
+        algo = Jade(2)
+        y, _ = perform_separation(x, algo)
     end
 end
 
