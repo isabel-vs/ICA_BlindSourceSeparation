@@ -48,7 +48,7 @@ using LinearAlgebra: I
     path = joinpath(root, "data", "foetal_ecg.dat")
     x = read_dataset(path)
     algo = Jade(2)
-    x = perform_separation(x, algo)
+    x, _ = perform_separation(x, algo)
     n, m = size(x.data)
     @test (n == 2500) && (m == 2)
 
