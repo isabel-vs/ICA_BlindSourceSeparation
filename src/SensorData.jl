@@ -145,13 +145,18 @@ end
 """
     demo()
 
-Plots the whitened data in the foetal_ecg database.
+Compares Jade, Shibbs, Picard algorithms for separating ECG data.
 """
 function demo()
     root = pkgdir(ICA_BlindSourceSeparation)
     path = joinpath(root, "data", "foetal_ecg.dat")
-    plt = plot_dataset(whiten_dataset(read_dataset(path)))
+    x = read_dataset(path)
+    y1, _ = perform_separation(x,Jade(2))
+    y2, _ = perform_separation(x,Shibbs(2, 1000))
+    y3, _ = perform_separation(x,Picard(3, 200, 1e-6, 1e-2, 10, false))
+    p1 = plot_dataset(y1)
+    p2 = plot_dataset(y2)
+    p3 = plot_dataset(y3)
+    plt = plot(p1, p2, p3, layout = (3,1))
     display(plt)
 end
-
-#perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")
