@@ -32,11 +32,11 @@ Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whi
 function whiten_dataset(dataset::sensorData, m::Int)
     
     n_rows, n_cols = size(dataset.data)
+    if (n_cols == 0)
+        throw("Matrix must have at least one column.")
+    end
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
-    end
-    if (n_cols == 0)
-        throw("Matrix must have at least two columns.")
     end
     
     # Copy to avoid modifying the original matrix
@@ -125,13 +125,13 @@ end
 Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
-    if (length(dataset.time) != size(dataset.data, 1)) 
-        throw("Mismatch between time length and signal lengths!")
-    end
     if (size(dataset.data, 2) == 0)
         throw("Data must have at least one column!")
     end
-
+    if (length(dataset.time) != size(dataset.data, 1)) 
+        throw("Mismatch between time length and signal lengths!")
+    end
+    
     time = dataset.time
     signals = dataset.data
     nsignals = size(signals, 2)
@@ -157,4 +157,4 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
 end
 
-perform_separation(dataset, algo) = error("$algo is not a valid algorithm")
+perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")

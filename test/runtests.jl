@@ -4,6 +4,7 @@ using Statistics: cov
 using LinearAlgebra: I
 
 include("data_tests.jl")
+include("error_tests.jl")
 
 @testset "ICA_BlindSourceSeparation.jl" begin
     # Write your tests here.
@@ -67,5 +68,7 @@ include("data_tests.jl")
 
     data_test_all_algos()
 
-    plot_dataset(x)
+    demo()
+
+    error_tests()
 end
