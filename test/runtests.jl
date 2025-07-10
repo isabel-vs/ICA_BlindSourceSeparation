@@ -3,6 +3,8 @@ using Test
 using Statistics: cov
 using LinearAlgebra: I
 
+include("data_tests.jl")
+
 @testset "ICA_BlindSourceSeparation.jl" begin
     # Write your tests here.
 
@@ -39,12 +41,7 @@ using LinearAlgebra: I
     end
     @test test_val
     
-    # testidea: all algorithms should create roughly the same output
-
-
-    # other testidea: compare Jade and Shibbs result with C or Matlab result from JnS
     # JADE
-    
     path = joinpath(root, "data", "foetal_ecg.dat")
     x = read_dataset(path)
     algo = Jade(2)
@@ -61,12 +58,13 @@ using LinearAlgebra: I
     @test (n == 2500) && (m == 2)
 
     # Picard
-    #=
     path = joinpath(root, "data", "foetal_ecg.dat")
     x = read_dataset(path)
-    algo = Picard(???)
+    algo = Picard(3, 200, 1e-6, 1e-2, 10, false)
     x = perform_separation(x, algo)
     n, m = size(x.data)
-    @test (n == 2500) && (m == 2)
-    =#
+    @test (n == 2500) && (m == 8)
+
+    data_test_all_algos()
+  
 end
