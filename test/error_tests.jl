@@ -1,11 +1,8 @@
-function error_tests()
+function error_tests(foetal_data::sensorData)
     # Shibbs m > n error
-    root = pkgdir(ICA_BlindSourceSeparation)
-    path = joinpath(root, "data", "foetal_ecg.dat")
-    x = read_dataset(path)
     test_val = false
     try
-        y = perform_separation(x, Shibbs(10, 1000))
+        y = perform_separation(foetal_data, Shibbs(10, 1000))
     catch
         test_val = true
     end

@@ -70,5 +70,5 @@ include("error_tests.jl")
 
     demo()
 
-    error_tests()
+    error_tests(read_dataset(path))
 end
