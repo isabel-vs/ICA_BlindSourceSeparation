@@ -60,12 +60,12 @@ include("data_tests.jl")
             root = pkgdir(ICA_BlindSourceSeparation)
             path = joinpath(root, "data", "foetal_ecg.dat")
             x = read_dataset(path)
-            algo = Picard(3, 200, 1e-6, 1e-2, 10, false)
+            algo = Picard(2, 3, 200, 1e-6, 1e-2, 10, false)
             x, _ = perform_separation(x, algo)
             n, m = size(x.data)
-            @test (n == 2500) && (m == 8)
+            @test (n == 2500) && (m == 2)
 
-            #@test test_algo(Picard(2, 200, 1e-6, 1e-2, 10, false), 1)
+            #@test test_algo(Picard(2, 3, 200, 1e-6, 1e-2, 10, false), 1)
         end
     end
     @testset "Plotting" begin
