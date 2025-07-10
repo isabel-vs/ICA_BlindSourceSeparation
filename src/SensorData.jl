@@ -37,6 +37,8 @@ function whiten_dataset(dataset::sensorData, m::Int)
     if (length(dataset.time) != n_rows)
         throw(DimensionMismatch("Mismatch between time length and signal lengths"))
     end
+
+    T_type = eltype(dataset.data)
     
     # Copy to avoid modifying the original matrix
     X = dataset.data
@@ -48,14 +50,14 @@ function whiten_dataset(dataset::sensorData, m::Int)
     X_centered = X .- μ
 
     # calculate sample covariance matrix (NxN)
-    Σ = cov(X_centered, dims=1, corrected=false)
+    Σ = Matrix{T_type}(cov(X_centered, dims=1, corrected=false))
 
     # eigendecomposition of Σ
     eigenvals, U = eigen(Symmetric(Σ))
 
     # select m largest eigenvalues
     rangeW = n-m+1:n
-    scales = sqrt.(eigenvals[rangeW])
+    scales = T_type.(sqrt.(eigenvals[rangeW]))
         
     # calculate whitening matrix
     W = Diagonal(1 ./scales) * U[:, rangeW]'

@@ -10,18 +10,19 @@ Adapted from Jean-François Cardoso's MATLAB version
 
 Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
 Returns the dataset combined with transformation matrix as well as the transformation Matrix
+
+See also [`whiten_dataset`](@ref), [`estimate_cumulants`](@ref), [`joint_diagonalize`](@ref)
 """
 function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
     d_white, B, iW = whiten_dataset(dataset, m)
     X = Matrix(d_white.data')
+    T_type = eltype(X)
 
     T = size(d_white.data, 1)
     n = size(d_white.data, 2)
 
     seuil = 0.01 / sqrt(T)
 
-    V = zeros(2,2)
-    
     # === Outer loop ===
     OneMoreStep = true
     nSteps = 0

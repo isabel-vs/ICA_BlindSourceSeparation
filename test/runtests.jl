@@ -74,7 +74,7 @@ include("data_tests.jl")
             path = joinpath(root, "data", "foetal_ecg.dat")
             x = read_dataset(path)
             algo = Picard(3, 200, 1e-6, 1e-2, 10, false)
-            x = perform_separation(x, algo)
+            x, _ = perform_separation(x, algo)
             n, m = size(x.data)
             @test (n == 2500) && (m == 8)
 
