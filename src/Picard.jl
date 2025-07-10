@@ -23,6 +23,7 @@ Perform Independent Component Analysis (ICA) using the Picard algorithm with lim
 
 # Returns
 - `sensorData`: A new `sensorData` object containing the unmixed data.
+- `W`: The unmixing matrix.
 """
 function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
@@ -125,7 +126,7 @@ function ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda
         end
     end
 
-    return sensorData(dataset.time, Matrix(transpose(Y)))
+    return sensorData(dataset.time, Matrix(transpose(Y))), W
 end
 
 """
@@ -152,7 +153,7 @@ end
  - `psiY::AbstractMatrix{<:Real}`: input array of size `N×T`, where each row is a signal component over `T` observations.
 
  # Returns
- - a vebtor in which each entry  represents the average derivative of the `tanh` nonlinearity, evaluated at each value in the corresponding row of `psiY`.
+ - a vector in which each entry  represents the average derivative of the `tanh` nonlinearity, evaluated at each value in the corresponding row of `psiY`.
 """
 function score_der(psiY::AbstractMatrix{<:Real})
     return vec(1 .- mean(psiY .^ 2, dims=2))
