@@ -19,28 +19,15 @@ include("data_tests.jl")
     @testset "read_dataset" begin
         # test if reading functions recognize edgecases correctly
         root = pkgdir(ICA_BlindSourceSeparation)
-        test_files = ["empty.dat", "misshaped.dat", "timecolumn.dat"]
-        for i in test_files
-            path = joinpath(root, "data", i)
-            test_val = false
-            try
-                read_dataset(path)
-            catch
-                test_val = true
-            end
-            @test test_val
-        end
+        @test_throws ArgumentError read_dataset(joinpath(root, "data", "empty.dat"))
+        @test_throws DimensionMismatch read_dataset(joinpath(root, "data", "misshaped.dat"))
+        @test_throws ArgumentError read_dataset(joinpath(root, "data", "timecolumn.dat"))
         
-        path = joinpath(root, "data", "with_comments.dat")
         test_val = true
-        try
-            test_data = read_dataset(path).data
-            if test_data[3,2] != 0.5404
-                test_val = false
-            end        
-        catch
+        test_data = read_dataset(joinpath(root, "data", "with_comments.dat")).data
+        if test_data[3,2] != 0.5404
             test_val = false
-        end
+        end        
         @test test_val
     end
     @testset "Algorithms" begin
