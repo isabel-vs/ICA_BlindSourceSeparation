@@ -115,15 +115,15 @@ function read_dataset(filename::String)
 end
 
 """
-    plot_matrix(dataset::sensorData)
+    plot_dataset(dataset::sensorData)
     
 Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
     if (length(dataset.time) != size(dataset.data, 1)) 
-        throw("Mismatch between time length and signal lengths!")
+        throw(DimensionMismatch("Mismatch between time length and signal lengths!"))
     end
-    
+
     time = dataset.time
     signals = dataset.data
     nsignals = size(signals, 2)
@@ -137,7 +137,7 @@ function plot_dataset(dataset::sensorData)
         plot!(plt, time, trace, label="Signal $i")
     end
     
-    display(plt)
+    return plt
 end
 
 """
@@ -148,7 +148,8 @@ Plots the whitened data in the foetal_ecg database.
 function demo()
     root = pkgdir(ICA_BlindSourceSeparation)
     path = joinpath(root, "data", "foetal_ecg.dat")
-    plot_dataset(whiten_dataset(read_dataset(path)))
+    plt = plot_dataset(whiten_dataset(read_dataset(path)))
+    display(plt)
 end
 
 #perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")
