@@ -22,7 +22,8 @@ function ica_jade(dataset::sensorData, m::Int)
 
     # joint diagonalization of cumulant matrices
     T = size(d_white.data, 1)
-    V, _ = joint_diagonalize(CM, 0.01 / sqrt(T), (2^63)-1)
+    max_iters = typemax(Int64)
+    V, _ = joint_diagonalize(CM, 0.01 / sqrt(T), max_iters)
 
     # source estimation
     X_white = d_white.data
