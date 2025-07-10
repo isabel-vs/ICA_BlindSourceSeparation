@@ -126,10 +126,10 @@ Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
     if (length(dataset.time) != size(dataset.data, 1)) 
-        throw("Mismatch between time length and signal lengths!")
+        throw(DimensionMismatch("Mismatch between time length and signal lengths!"))
     end
     if (size(dataset.data, 2) == 0)
-        throw("Data must have at least one column!")
+        throw(ArgumentError("Data must have at least one column!"))
     end
 
     time = dataset.time
@@ -145,7 +145,7 @@ function plot_dataset(dataset::sensorData)
         plot!(plt, time, trace, label="Signal $i")
     end
     
-    display(plt)
+    return plt
 end
 
 """
@@ -154,7 +154,8 @@ end
 Plots the whitened data in the foetal_ecg database.
 """
 function demo()
-    plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
+    plt = plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
+    display(plt)
 end
 
 perform_separation(dataset, algo) = error("$algo is not a valid algorithm")

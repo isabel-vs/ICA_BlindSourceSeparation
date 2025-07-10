@@ -2,6 +2,7 @@ using ICA_BlindSourceSeparation
 using Test
 using Statistics: cov
 using LinearAlgebra: I
+using Plots
 
 include("data_tests.jl")
 
@@ -17,6 +18,7 @@ include("data_tests.jl")
     end
     @testset "read_dataset" begin
         # test if reading functions recognize edgecases correctly
+        root = pkgdir(ICA_BlindSourceSeparation)
         test_files = ["empty.dat", "misshaped.dat", "timecolumn.dat"]
         for i in test_files
             path = joinpath(root, "data", i)
@@ -44,6 +46,7 @@ include("data_tests.jl")
     @testset "Algorithms" begin
         @testset "Jade" begin
             # JADE
+            root = pkgdir(ICA_BlindSourceSeparation)
             path = joinpath(root, "data", "foetal_ecg.dat")
             x = read_dataset(path)
             algo = Jade(2)
@@ -55,6 +58,7 @@ include("data_tests.jl")
         end
         @testset "Shibbs" begin
             # Shibbs
+            root = pkgdir(ICA_BlindSourceSeparation)
             path = joinpath(root, "data", "foetal_ecg.dat")
             x = read_dataset(path)
             algo = Shibbs(2, 1000)
@@ -66,6 +70,7 @@ include("data_tests.jl")
         end
         @testset "Picard" begin
             # Picard
+            root = pkgdir(ICA_BlindSourceSeparation)
             path = joinpath(root, "data", "foetal_ecg.dat")
             x = read_dataset(path)
             algo = Picard(3, 200, 1e-6, 1e-2, 10, false)
@@ -77,7 +82,30 @@ include("data_tests.jl")
         end
     end
     @testset "Plotting" begin
-         plot_dataset(x)
+        root = pkgdir(ICA_BlindSourceSeparation)
+        path = joinpath(root, "data", "foetal_ecg.dat")
+        x = read_dataset(path)
+        plt = plot_dataset(x)
+        @test plt isa Plots.Plot
+        sp = plt[1]
+        xaxis_obj = sp.attr[:xaxis]
+        yaxis_obj = sp.attr[:yaxis]
+        @test sp.attr[:title] == "Estimated Source Signals"
+
+        @testset "Error Handling" begin
+            # Test case for time/data dimension mismatch
+            invalid_time_data = sensorData(
+                [1.0, 2.0], # 2 time points
+                [1.0 4.0; 2.0 5.0; 3.0 6.0] # 3 rows of data
+            )
+            @test_throws DimensionMismatch plot_dataset(invalid_time_data)
+
+            # Test case for data with no columns
+            empty_col_data = sensorData(
+                [1.0, 2.0, 3.0],
+                zeros(3, 0) # 3 rows, 0 columns
+            )
+            @test_throws ArgumentError plot_dataset(empty_col_data)
+        end
     end
-    # data_test_all_algos()
 end
