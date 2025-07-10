@@ -30,8 +30,10 @@ Applies PCA whitening to a dataset, reducing its dimensionality to m components.
 Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
 function whiten_dataset(dataset::sensorData, m::Int)
-    
     n_rows, n_cols = size(dataset.data)
+    if (m>n_cols)
+        throw("More sources than sensors")
+    end
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
     end
@@ -40,10 +42,6 @@ function whiten_dataset(dataset::sensorData, m::Int)
     X = dataset.data
     T = size(X,1)
     n = size(X,2)
-
-    if (m>n)
-        throw("More sources than sensors")
-    end
 
     # center matrix
     μ = mean(X, dims=1)
@@ -153,4 +151,4 @@ function demo()
     plot_dataset(whiten_dataset(read_dataset(path)))
 end
 
-perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")
+#perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")
