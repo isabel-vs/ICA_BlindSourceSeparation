@@ -5,6 +5,15 @@ struct sensorData{
 }
     time::T_time  # Vector of size C containing timestamps
     data::T_data  # CxN Matrix containing data of N sensors corresponding to timestamps.
+
+    function sensorData(time::T_time, data::T_data) where {
+        T_time<:AbstractVector{<:Real},
+        T_data<:AbstractMatrix{<:Real}
+    } 
+        Base.require_one_based_indexing(time)
+        Base.require_one_based_indexing(data)
+        new{T_time, T_data}(time, data)
+    end
 end
 
 """

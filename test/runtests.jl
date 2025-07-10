@@ -1,5 +1,5 @@
 using ICA_BlindSourceSeparation
-using Test
+using Test: @test, @test_throws, @testset
 using Statistics: cov
 using LinearAlgebra: I
 using Plots
