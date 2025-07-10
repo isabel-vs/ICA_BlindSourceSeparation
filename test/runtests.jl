@@ -66,5 +66,6 @@ include("data_tests.jl")
     @test (n == 2500) && (m == 8)
 
     data_test_all_algos()
-  
+
+    plot_dataset(x)
 end
