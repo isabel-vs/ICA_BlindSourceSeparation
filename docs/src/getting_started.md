@@ -21,7 +21,7 @@ Plot dataset
 
 Prepare JADE algorithm
 
-    algo = Jade(size(x.data, 2))
+    algo = Jade(2)
 
 Prepare Shibbs algorithm
 
@@ -33,7 +33,7 @@ Prepare Picard algorithm
 
 Run source separation
 
-    x = perform_separation(x, algo)
+    x, s_ = perform_separation(x, algo)
 
 Plot again
 
@@ -47,7 +47,7 @@ This example plots the original whitened data, as well as the results of Jade, S
     x = whiten_dataset(x)
     plot_dataset(x)
 
-    algo = Jade(size(x.data, 2))
+    algo = Jade(2)
     y = perform_separation(x, algo)
     plot_dataset(y)
 
