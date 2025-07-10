@@ -30,23 +30,18 @@ Applies PCA whitening to a dataset, reducing its dimensionality to m components.
 Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whitening matrix iW (nxm)
 """
 function whiten_dataset(dataset::sensorData, m::Int)
-    
     n_rows, n_cols = size(dataset.data)
+    if (m>n_cols)
+        throw("More sources than sensors")
+    end
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
-    end
-    if (n_cols == 0)
-        throw("Matrix must have at least two columns.")
     end
     
     # Copy to avoid modifying the original matrix
     X = dataset.data
     T = size(X,1)
     n = size(X,2)
-
-    if (m>n)
-        throw("More sources than sensors")
-    end
 
     # center matrix
     μ = mean(X, dims=1)
@@ -120,16 +115,13 @@ function read_dataset(filename::String)
 end
 
 """
-    plot_matrix(dataset::sensorData)
+    plot_dataset(dataset::sensorData)
     
 Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
     if (length(dataset.time) != size(dataset.data, 1)) 
         throw(DimensionMismatch("Mismatch between time length and signal lengths!"))
-    end
-    if (size(dataset.data, 2) == 0)
-        throw(ArgumentError("Data must have at least one column!"))
     end
 
     time = dataset.time
@@ -154,8 +146,10 @@ end
 Plots the whitened data in the foetal_ecg database.
 """
 function demo()
-    plt = plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
+    root = pkgdir(ICA_BlindSourceSeparation)
+    path = joinpath(root, "data", "foetal_ecg.dat")
+    plt = plot_dataset(whiten_dataset(read_dataset(path)))
     display(plt)
 end
 
-perform_separation(dataset, algo) = error("$algo is not a valid algorithm")
+#perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")

@@ -20,10 +20,6 @@ function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
 
     seuil = 0.01 / sqrt(T)
 
-    if m > n
-        error("shibbs -> Do not ask for more sources than sensors.")
-    end
-
     V = zeros(2,2)
     
     # === Outer loop ===

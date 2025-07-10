@@ -5,6 +5,7 @@ using LinearAlgebra: I
 using Plots
 
 include("data_tests.jl")
+include("error_tests.jl")
 
 @testset "ICA_BlindSourceSeparation.jl" begin
     @testset "whitening" begin
@@ -91,21 +92,9 @@ include("data_tests.jl")
         xaxis_obj = sp.attr[:xaxis]
         yaxis_obj = sp.attr[:yaxis]
         @test sp.attr[:title] == "Estimated Source Signals"
-
-        @testset "Error Handling" begin
-            # Test case for time/data dimension mismatch
-            invalid_time_data = sensorData(
-                [1.0, 2.0], # 2 time points
-                [1.0 4.0; 2.0 5.0; 3.0 6.0] # 3 rows of data
-            )
-            @test_throws DimensionMismatch plot_dataset(invalid_time_data)
-
-            # Test case for data with no columns
-            empty_col_data = sensorData(
-                [1.0, 2.0, 3.0],
-                zeros(3, 0) # 3 rows, 0 columns
-            )
-            @test_throws ArgumentError plot_dataset(empty_col_data)
-        end
     end
+
+    demo()
+    
+    error_tests()
 end
