@@ -27,7 +27,7 @@ Perform Independent Component Analysis (ICA) using the Picard algorithm with lim
 """
 function ica_picard(dataset::sensorData, sig::Int, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
-    w_dataset = whiten_dataset(dataset, sig)
+    w_dataset, Wm, iWm = whiten_dataset(dataset, sig)
     X = transpose(w_dataset.data) # transposed data part of the dataset
     N, T = size(X) # saving the sizes, N rows for N signals, T columns for T points in time
     W = Matrix{Float64}(I, N, N) # unmixing matrix, initialy identity matrix   
