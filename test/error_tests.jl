@@ -1,6 +1,8 @@
 function error_tests()
     # Shibbs m > n error
-    x = read_dataset("data/foetal_ecg.dat")
+    root = pkgdir(ICA_BlindSourceSeparation)
+    path = joinpath(root, "data", "foetal_ecg.dat")
+    x = read_dataset(path)
     test_val = false
     try
         y = perform_separation(x, Shibbs(10, 1000))
