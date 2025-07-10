@@ -32,10 +32,10 @@ Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whi
 function whiten_dataset(dataset::sensorData, m::Int)
     n_rows, n_cols = size(dataset.data)
     if (m>n_cols)
-        throw("More sources than sensors")
+        throw(ArgumentError("More sources than sensors"))
     end
     if (length(dataset.time) != n_rows)
-        throw("Mismatch between time length and signal lengths")
+        throw(DimensionMismatch("Mismatch between time length and signal lengths"))
     end
     
     # Copy to avoid modifying the original matrix
@@ -90,11 +90,11 @@ function read_dataset(filename::String)
             if ncols == 0
                 ncols = length(values)
                 if (ncols <= 1)
-                    throw("No valid data found in the file")
+                    throw(ArgumentError("No valid data found in the file"))
                 end
             else
                 if (length(values) != ncols)
-                    throw("Inconsistent number of columns on line $(nrows + 1)")
+                    throw(DimensionMismatch("Inconsistent number of columns on line $(nrows + 1)"))
                 end
             end
 
@@ -104,7 +104,7 @@ function read_dataset(filename::String)
     end
 
     if (nrows == 0)
-        throw("The file contains no valid data rows")
+        throw(ArgumentError("The file contains no valid data rows"))
     end
 
     data = reshape(data, ncols, nrows)'

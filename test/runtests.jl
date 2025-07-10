@@ -5,7 +5,6 @@ using LinearAlgebra: I
 using Plots
 
 include("data_tests.jl")
-include("error_tests.jl")
 
 @testset "ICA_BlindSourceSeparation.jl" begin
     @testset "whitening" begin
@@ -95,6 +94,29 @@ include("error_tests.jl")
     end
 
     demo()
-    
-    error_tests()
+
+    @testset "Error Handling" begin
+        root = pkgdir(ICA_BlindSourceSeparation)
+        path = joinpath(root, "data", "foetal_ecg.dat")
+        x = read_dataset(path)
+        @test_throws ArgumentError whiten_dataset(x, 10)
+
+        time = [0, 1, 2]
+        data = zeros(2,2)
+        @test_throws DimensionMismatch whiten_dataset(sensorData(time, Matrix(data)), 2)
+        
+        @test_throws DimensionMismatch plot_dataset(sensorData(time, Matrix(data)))
+
+        # Perform separation without implemented algorithm
+        #=
+        not_a_real_algo = 5
+        test_val = false
+        try
+            perform_separation(x, not_a_real_algo)
+        catch
+            test_val = true
+        end
+        @test test_val
+        =#
+    end
 end
