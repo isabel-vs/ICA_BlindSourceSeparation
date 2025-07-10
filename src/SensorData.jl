@@ -154,7 +154,9 @@ end
 Plots the whitened data in the foetal_ecg database.
 """
 function demo()
-    plot_dataset(whiten_dataset(read_dataset("data/foetal_ecg.dat")))
+    root = pkgdir(ICA_BlindSourceSeparation)
+    path = joinpath(root, "data", "foetal_ecg.dat")
+    plot_dataset(whiten_dataset(read_dataset(path)))
 end
 
 perform_separation(dataset, algo) = throw("$algo is not a valid algorithm")
