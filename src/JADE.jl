@@ -26,12 +26,11 @@ function ica_jade(dataset::sensorData, m::Int)
     V, _ = joint_diagonalize(CM, 0.01 / sqrt(T), max_iters)
 
     # source estimation
-    X_white = d_white.data
-    S = X_white * V
+    B = V' * W
+    B = sort_by_energy(B)
+    S = dataset.data * B'
 
-    #TODO: order according to "most energetically significant" (as in matlab code)
-
-    return sensorData(dataset.time, S), V
+    return sensorData(dataset.time, S), B
 end
 
 struct Jade
