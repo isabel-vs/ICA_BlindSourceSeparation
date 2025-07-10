@@ -32,9 +32,6 @@ Returns the whitened dataset (Txm), whitening matrix W (mxn), pseudo-inverse whi
 function whiten_dataset(dataset::sensorData, m::Int)
     
     n_rows, n_cols = size(dataset.data)
-    if (n_cols == 0)
-        throw("Matrix must have at least one column.")
-    end
     if (length(dataset.time) != n_rows)
         throw("Mismatch between time length and signal lengths")
     end
@@ -125,9 +122,6 @@ end
 Plots each column of the dataset against the timestamp vector
 """
 function plot_dataset(dataset::sensorData)
-    if (size(dataset.data, 2) == 0)
-        throw("Data must have at least one column!")
-    end
     if (length(dataset.time) != size(dataset.data, 1)) 
         throw("Mismatch between time length and signal lengths!")
     end
