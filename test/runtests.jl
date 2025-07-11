@@ -75,9 +75,10 @@ include("data_tests.jl")
         plt = plot_dataset(x)
         @test plt isa Plots.Plot
         sp = plt[1]
-        xaxis_obj = sp.attr[:xaxis]
-        yaxis_obj = sp.attr[:yaxis]
         @test sp.attr[:title] == "Estimated Source Signals"
+        plt = plot_dataset(x; title="test")
+        sp = plt[1]
+        @test sp.attr[:title] == "test"
     end
 
     @testset "Demo" begin
