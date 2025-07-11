@@ -20,3 +20,11 @@ The used dataset is a set of cutaneous recordings of a potentially pregnant woma
 [![Coverage](https://codecov.io/gh/isabel-vs/ICA_BlindSourceSeparation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/isabel-vs/ICA_BlindSourceSeparation.jl)
 
 **Disclaimer:** The JADE, Shibbs and Picard algorithms are adaptations from JF Cardosos Matlab libraries.
+
+## Information for Windows users
+On some machines the plotting function doesn't work due to issues with the Plots packages default backen. It may be necessary to add these lines to your script:
+
+    using Pkg
+    Pkg.add("PyPlot")
+    using Plots
+    pyplot()
