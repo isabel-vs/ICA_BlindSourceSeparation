@@ -65,7 +65,7 @@ include("data_tests.jl")
             n, m = size(x.data)
             @test (n == 2500) && (m == 2)
 
-            #@test test_algo(Picard(2, 3, 200, 1e-6, 1e-2, 10, false), 1)
+            @test test_algo(Picard(2, 3, 200, 1e-6, 1e-2, 10, false), 1)
         end
     end
     @testset "Plotting" begin
@@ -93,17 +93,5 @@ include("data_tests.jl")
         @test_throws DimensionMismatch whiten_dataset(sensorData(time, Matrix(data)), 2)
         
         @test_throws DimensionMismatch plot_dataset(sensorData(time, Matrix(data)))
-
-        # Perform separation without implemented algorithm
-        #=
-        not_a_real_algo = 5
-        test_val = false
-        try
-            perform_separation(x, not_a_real_algo)
-        catch
-            test_val = true
-        end
-        @test test_val
-        =#
     end
 end
