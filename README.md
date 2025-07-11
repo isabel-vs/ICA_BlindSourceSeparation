@@ -16,9 +16,7 @@ The used dataset is a set of cutaneous recordings of a potentially pregnant woma
 \
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://isabel-vs.github.io/ICA_BlindSourceSeparation.jl/)
 [![Dev](https://img.shields.io/badge/docs-dev-pink.svg)](https://isabel-vs.github.io/ICA_BlindSourceSeparation.jl/dev/)
-
 [![BuildStatus](https://github.com/isabel-vs/ICA_BlindSourceSeparation.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/isabel-vs/ICA_BlindSourceSeparation.jl/actions/workflows/CI.yml?query=branch%3Amain)
-
 [![Coverage](https://codecov.io/gh/isabel-vs/ICA_BlindSourceSeparation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/isabel-vs/ICA_BlindSourceSeparation.jl)
 
-**Disclaimer:** The JADE and Shibbs algorithms are adaptations from the JnS Matlab library from JF Cardoso.
+**Disclaimer:** The JADE, Shibbs and Picard algorithms are adaptations from JF Cardosos Matlab libraries.
