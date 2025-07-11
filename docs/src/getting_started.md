@@ -49,6 +49,6 @@ This example plots the original data, the whitened data, as well as the results 
     b, _ = perform_separation(x, algo)
     plot_dataset(b; title="Shibbs - Estimated Source Signals")
 
-    algo = Picard(2, 3, 200, 1e-6, 1e-2, 10, true)
+    algo = Picard(2, 3, 200, 1e-6, 1e-2, 10, false)
     c, _ = perform_separation(x, algo)
     plot_dataset(c; title="Picard - Estimated Source Signals")
