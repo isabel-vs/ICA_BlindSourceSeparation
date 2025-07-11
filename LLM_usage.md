@@ -179,3 +179,111 @@ For a robust testing suite, **use a combination of both methods**:
 2.  **Use Visual Regression Testing** for a small number of key, representative plots. This gives you a high-level guarantee that the overall visual style hasn't been broken by a dependency update or a code change.
 
 This hybrid approach gives you the best of both worlds: fast, detailed data checks and a safety net for the final visual product.
+
+_Mistral:_
+
+Q: To test my shibbs implementation i have a sinewave and a squarewave mixed together. The shibbs algorithm however needs to run multiple times on it’s own output to recover the original waves. I read, that shibbs can run into local minima. Is that correct?
+
+A: The SHIBBS (Separation of Harmonic Interference Using Basis Based Methods) algorithm, like many optimization-based signal separation techniques, can indeed encounter issues with local minima. This is a common challenge in iterative optimization algorithms where the solution space is complex and has multiple minima.
+
+Here's a brief explanation of why local minima can be a problem:
+
+Optimization Landscape: In many optimization problems, the cost or objective function that the algorithm is trying to minimize may have multiple "valleys" or minima. The global minimum represents the best solution, but there can be many local minima where the cost function is lower than at nearby points but not the lowest overall.
+
+Iterative Nature: Algorithms like SHIBBS often work iteratively, adjusting parameters to gradually improve the solution. Depending on the initial conditions and the nature of the optimization landscape, the algorithm might converge to a local minimum rather than the global minimum.
+
+Initial Conditions: The starting point for the iterations can significantly influence whether the algorithm converges to a global or local minimum. Poor initial conditions might lead the algorithm into a local minimum from which it cannot escape.
+
+Algorithm Design: Some algorithms include features to try to avoid local minima, such as random restarts, simulated annealing, or other techniques to explore the solution space more broadly.
+
+In the context of SHIBBS, if the algorithm gets stuck in a local minimum, it might not perfectly separate the sine wave and the square wave, especially if they have overlapping harmonics or other complexities. Running the algorithm multiple times with different initial conditions or tweaking the algorithm parameters might help in achieving better separation by avoiding local minima.
+
+_ChatGPT:_
+
+Q: Can you tell me different ICA algorithms other than FastICA, Picard, JADE, Shibbs and infomax?
+
+A: Certainly! Independent Component Analysis (ICA) has a rich variety of algorithms beyond the commonly cited ones like **FastICA**, **Picard**, **JADE**, **Shibbs**, and **Infomax**. Here are **additional ICA algorithms** that have been developed for various purposes such as better convergence, robustness to noise, or handling complex-valued signals:
+
+---
+
+### 🔹 **1. Extended Infomax**
+
+* **Purpose**: Generalization of Infomax to handle both **super-Gaussian and sub-Gaussian** sources.
+* **Notable Feature**: Dynamically adapts to the kurtosis of the sources.
+
+---
+
+### 🔹 **2. EVD-ICA (Eigenvalue Decomposition ICA)**
+
+* **Approach**: Uses second- and higher-order statistics with **eigenvalue decompositions**.
+* **Suitable for**: Situations where computational simplicity is important.
+
+---
+
+### 🔹 **3. RADICAL (Robust, Accurate, Direct ICA aLgorithm)**
+
+* **Based on**: Estimation of differential entropy using **nearest-neighbor statistics**.
+* **Strength**: Robust to noise and non-Gaussianity.
+
+---
+
+### 🔹 **4. Kernel ICA**
+
+* **Based on**: **Kernel methods** and **Reproducing Kernel Hilbert Space (RKHS)**.
+* **Strength**: Can separate nonlinearly mixed signals.
+* **Drawback**: Computationally intensive.
+
+---
+
+### 🔹 **5. Convex ICA (Convex Optimization ICA)**
+
+* **Approach**: Formulates ICA as a **convex optimization problem**.
+* **Advantage**: Global optimality; avoids local minima issues.
+
+---
+
+### 🔹 **6. Robust ICA**
+
+* **Purpose**: Enhances resilience to outliers and noise.
+* **Method**: Often based on **M-estimators** or other robust statistical techniques.
+
+---
+
+### 🔹 **7. Spectral ICA**
+
+* **Approach**: Combines **spectral decomposition** and ICA principles.
+* **Strength**: Efficient for large datasets.
+
+---
+
+### 🔹 **8. Multidimensional ICA (MICA)**
+
+* **Extension**: Works with **multidimensional components** (e.g., multi-channel EEG).
+* **Used in**: Biomedical signal processing.
+
+---
+
+### 🔹 **9. Independent Subspace Analysis (ISA)**
+
+* **Variant of ICA**: Finds **groups of dependent components** that are mutually independent.
+* **Used for**: Hierarchical or structured source separation.
+
+---
+
+### 🔹 **10. Temporal ICA**
+
+* **Focus**: Exploits **temporal structure** of sources (like autocorrelation).
+* **Applications**: fMRI, EEG, audio signals.
+
+---
+
+If you're interested in nonlinear ICA or ICA extensions for deep learning and time-series, there are also:
+
+### 🔹 **11. Nonlinear ICA**
+
+* Recent models using **deep generative models**, like **contrastive learning** or **variational inference**.
+* Examples: **iVAE (Identifiable VAE)**, **Time-Contrastive Learning**, **Denoising ICA**.
+
+---
+
+Let me know if you'd like implementation examples or comparisons between these algorithms!
