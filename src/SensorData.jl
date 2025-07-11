@@ -126,11 +126,11 @@ function read_dataset(filename::String)
 end
 
 """
-    plot_dataset(dataset::sensorData)
+    plot_dataset(dataset::sensorData; title="Estimated Source Signals")
     
 Plots each column of the dataset against the timestamp vector
 """
-function plot_dataset(dataset::sensorData)
+function plot_dataset(dataset::sensorData; title="Estimated Source Signals")
     if (length(dataset.time) != size(dataset.data, 1)) 
         throw(DimensionMismatch("Mismatch between time length and signal lengths!"))
     end
@@ -140,7 +140,7 @@ function plot_dataset(dataset::sensorData)
     nsignals = size(signals, 2)
 
     spacing = 1.2 * maximum(abs.(signals))  
-    plt = plot(title="Estimated Source Signals", xlabel="Time (s)", yticks=false, legend=false)
+    plt = plot(title=title, xlabel="Time (s)", yticks=false, legend=false)
 
     for i in 1:nsignals
         offset = spacing * (nsignals - i)
