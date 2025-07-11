@@ -23,16 +23,13 @@ function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
 
     seuil = 0.01 / sqrt(T)
 
-    # === Outer loop ===
     OneMoreStep = true
     nSteps = 0
     while OneMoreStep && nSteps < maxSteps
-        # println("$nSteps")
         nSteps += 1
-        # Estimate cumulants
+
         CM = estimate_cumulants(X)
 
-        # Joint diagonalization
         V, rot_size = joint_diagonalize(CM, seuil, 100000)
 
         # Update
