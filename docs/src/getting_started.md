@@ -4,16 +4,12 @@ At this time the user can choose between JADE, Shibbs and Picard.
 
 ## How to use the datatype SensorData
 Key to using the package is the SensorData datatype. The user can either create a SensorData instance by loading it from disk using the read_dataset() function, or he can construct his own by provididing an array of timestamps of length N and a corresponding matrix of size NxM, where M is the amount of sensors in the dataset.
-When the user has created a SensorData instance, he can pass it to the whitening function, plot it or perform the Blind Source separation using the perform_separation function.
+When the user has created a SensorData instance, he might plot it or perform the Blind Source separation using the perform_separation function.
 
 ## Code Example 
 Load a dataset from disk
 
     x = read_dataset("data/foetal_ecg.dat")
-
-Perform whitening on the dataset
-
-    x = whiten_dataset(x)
 
 Plot dataset
 
@@ -31,30 +27,25 @@ Prepare Picard algorithm
 
     algo = Picard(3, 200, 1e-6, 1e-2, 10, true)
 
-Run source separation
+Run source separation. This yields the separated dataset as well as the unmixing matrix
 
-    x, s_ = perform_separation(x, algo)
-
-Plot again
-
-    plot_dataset(x)
+    x, s = perform_separation(x, algo)
 
 ### Complete example:
 
 This example plots the original whitened data, as well as the results of Jade, Shibbs and Picard algorithm.
 
     x = read_dataset("data/foetal_ecg.dat")
-    x = whiten_dataset(x)
     plot_dataset(x)
 
     algo = Jade(2)
-    y = perform_separation(x, algo)
-    plot_dataset(y)
+    a, _ = perform_separation(x, algo)
+    plot_dataset(a)
 
     algo = Shibbs(2, 1000)
-    z, _ = perform_separation(x, algo)
-    plot_dataset(z)
+    b, _ = perform_separation(x, algo)
+    plot_dataset(b)
 
     algo = Picard(3, 200, 1e-6, 1e-2, 10, true)
-    r = perform_separation(x, algo)
-    plot_dataset(r)
+    c, _ = perform_separation(x, algo)
+    plot_dataset(c)
