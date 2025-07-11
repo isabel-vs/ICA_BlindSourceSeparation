@@ -19,7 +19,7 @@ It aims to find a linear transformation that simultaneously diagonalizes these m
 
 **Computational Cost**: For large datasets or high-dimensional data, iterative updates can be time-consuming.
 
-**Parameter Sensitivity**: Choice of thresholds and max iterations needs careful tuning; poor choices can slow convergence or degrade results.
+**Parameter Sensitivity**: Choice of thresholds and max iterations needs careful tuning, as poor choices can slow convergence or degrade results.
 
 **No Guarantee of Global Optimum**: Like many iterative methods, it may converge to local optima rather than the best possible solution.
 

@@ -11,7 +11,7 @@ It works by exploiting higher-order statistical moments, specifically, fourth-or
 
 **Joint Diagonalization of Cumulants**: Offers improved performance in separating statistically independent components.
 
-**Well-Established**: Widely studied and validated in literature; known for reliable and consistent results in many domains.
+**Well-Established**: Widely studied and validated in literature. Known for reliable and consistent results in many domains.
 
 **Effective Whitening Preprocessing**: Reduces dimensionality and prepares data for optimal separation.
 
@@ -21,7 +21,7 @@ It works by exploiting higher-order statistical moments, specifically, fourth-or
 
 **Memory Usage**: Storing and processing multiple cumulant matrices can require substantial memory, especially for high-dimensional data.
 
-**Less Effective for Gaussian Sources**: Assumes non-Gaussianity; performance degrades when sources are close to Gaussian.
+**Less Effective for Gaussian Sources**: Assumes non-Gaussianity. Performance degrades when sources are close to Gaussian.
 
 **Fixed-Point Performance**: Lacks adaptability in convergence behavior compared to some gradient-based or iterative refinement methods.
 
