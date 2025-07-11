@@ -16,10 +16,8 @@ See also [`whiten_dataset`](@ref), [`estimate_cumulants`](@ref), [`joint_diagona
 function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
     d_white, B, iW = whiten_dataset(dataset, m)
     X = Matrix(d_white.data')
-    T_type = eltype(X)
 
     T = size(d_white.data, 1)
-    n = size(d_white.data, 2)
 
     seuil = 0.01 / sqrt(T)
 
