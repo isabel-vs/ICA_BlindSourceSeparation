@@ -13,11 +13,11 @@ It aims to find a linear transformation that simultaneously diagonalizes these m
 **Relatively Simple Updates**: Uses Givens rotations, which are computationally efficient and stable.
 
 ## Cons
-**Sensitivity to Initialization**: The starting point can affect the final output, sometimes leading to suboptimal local minima.
+**Sensitivity to Initialization**: Starting point can affect the final output, sometimes leading to suboptimal local minima.
 
 **Computational Cost**: For large datasets or high-dimensional data, iterative updates can be time-consuming.
 
-**No Guarantee of Global Optimum**: Like many iterative methods, it may converge to local optima rather than the best possible solution.
+**No Guarantee of Global Optimum**: May converge to local optima rather than the best possible solution.
 
 **Convergence Issues**: May require multiple runs or iterations to reach a good solution, especially with noisy or ill-conditioned data.
 As can be seen in the following diagram, only iteration 24 provided the correct separation.
