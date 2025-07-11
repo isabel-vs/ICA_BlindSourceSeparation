@@ -80,7 +80,10 @@ include("data_tests.jl")
         @test sp.attr[:title] == "Estimated Source Signals"
     end
 
-    demo()
+    @testset "Demo" begin
+        x, y1, y2, y3 = demo(return_data = true)
+        @test size(y1.data) == size(y2.data) == size(y3.data)
+    end
 
     @testset "Error Handling" begin
         root = pkgdir(ICA_BlindSourceSeparation)

@@ -152,11 +152,11 @@ function plot_dataset(dataset::sensorData)
 end
 
 """
-    demo()
+    demo(; return_data = false)
 
 Compares Jade, Shibbs, Picard algorithms for separating ECG data.
 """
-function demo()
+function demo(; return_data = false)
     root = pkgdir(ICA_BlindSourceSeparation)
     path = joinpath(root, "data", "foetal_ecg.dat")
     x = read_dataset(path)
@@ -168,4 +168,8 @@ function demo()
     p3 = plot_dataset(y3)
     plt = plot(p1, p2, p3, layout = (3,1))
     display(plt)
+    if return_data
+        return x, y1, y2, y3
+    end
+
 end
