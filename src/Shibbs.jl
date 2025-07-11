@@ -6,20 +6,20 @@ Adapted from Jean-François Cardoso's MATLAB version
 =------------------------------------------------------------=#
 
 """
-    ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
+    ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer, thresh::Real = 1)
 
 Outer loop of the shibbs algorithm. Whitens data and loops untile diagonalization result is within threshold.
 Returns the dataset combined with transformation matrix as well as the transformation Matrix
 
 See also [`whiten_dataset`](@ref), [`estimate_cumulants`](@ref), [`joint_diagonalize`](@ref)
 """
-function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer)
+function ica_shibbs(dataset::sensorData, m::Integer, maxSteps::Integer, thresh::Real = 1)
     d_white, B, iW = whiten_dataset(dataset, m)
     X = Matrix(d_white.data')
 
     T = size(d_white.data, 1)
 
-    seuil = 0.01 / sqrt(T)
+    seuil = (0.01 / sqrt(T)) / thresh
 
     OneMoreStep = true
     nSteps = 0
@@ -54,6 +54,7 @@ end
 struct Shibbs
     nSensors::Integer
     maxSteps::Integer
+    threshold::Real
 end
 
-perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors, algo.maxSteps)
+perform_separation(dataset, algo::Shibbs) = ica_shibbs(dataset, algo.nSensors, algo.maxSteps, algo.threshold)

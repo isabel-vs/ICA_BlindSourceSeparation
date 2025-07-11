@@ -60,6 +60,6 @@ end
 
 function data_test_all_algos()
     @test test_algo(Jade(2), 1)
-    @test test_algo(Shibbs(2, 1000), 100)
-    @test test_algo(Picard(3, 2, 200, 1e-6, 1e-2, 10, false), 1)
+    @test test_algo(Shibbs(2, 1000, 1), 100)
+    @test test_algo(Picard(2, 3, 200, 1e-6, 1e-2, 10, false), 1)
 end

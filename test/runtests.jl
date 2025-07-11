@@ -48,12 +48,12 @@ include("data_tests.jl")
             root = pkgdir(ICA_BlindSourceSeparation)
             path = joinpath(root, "data", "foetal_ecg.dat")
             x = read_dataset(path)
-            algo = Shibbs(2, 1000)
+            algo = Shibbs(2, 1000, 1)
             x, _ = perform_separation(x, algo)
             n, m = size(x.data)
             @test (n == 2500) && (m == 2)
 
-            @test test_algo(Shibbs(2, 1000), 100)
+            @test test_algo(Shibbs(2, 1000, 1), 100)
         end
         @testset "Picard" begin
             # Picard
