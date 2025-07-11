@@ -6,32 +6,33 @@ Adapted from Pierre Ablin, Jean-François Cardoso, Alexandre Gramfort's MATLAB v
 =------------------------------------------------------------=#
 
 """
-    ica_picard(dataset::sensorData, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
+    ica_picard(dataset::sensorData, sig::Int, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
 Perform Independent Component Analysis (ICA) using the Picard algorithm with limited-memory BFGS optimization.
 
 # Arguments
-- `dataset::sensorData`
+- `dataset::sensorData`: Input data with timestamps and a matrix of mixed signals
+- `sig::Int`: Number of mixed sources to be separated
 - `m::Int`: Size of L-BFGS's memory. Typical values are in the range 3-15
-- `maxiter::Int`: Maximal number of iterations
+- `maxiter::Int`: Maximum number of iterations
 - `tol::real`: tolerance for the stopping criterion. 
-    Iterations stop when the norm of the projected gradient gets smaller than tol.
+    Iterations stop when the norm of the projected gradient gets smaller than `tol`.
 - `lambda_min::Real`: Minimum eigenvalue for regularizing the Hessian approximation.
-- `ls_tries::Int`: Number of tries allowed for the backtracking line-search.
-    When that number is exceeded, the direction is thrown away and the gradient is used instead.
+- `ls_tries::Int`: Maximum number of attempts in the backtracking line search.
+    When that number is exceeded, the direction is discarded and the gradient is used instead.
 - `verbose::Bool=false`: If true, prints the informations about the algorithm.
 
 # Returns
-- `sensorData`: A new `sensorData` object containing the unmixed data.
+- `sensorData`: A new `sensorData` object containing the unmixed signals.
 - `W`: The unmixing matrix.
 """
 function ica_picard(dataset::sensorData, sig::Int, m::Int, maxiter::Int, tol::Real, lambda_min::Real, ls_tries::Int; verbose::Bool=false)
 
-    w_dataset, Wm, iWm = whiten_dataset(dataset, sig)
+    w_dataset, Wm, iWm = whiten_dataset(dataset, sig) # whitening the dataset
     X = transpose(w_dataset.data) # transposed data part of the dataset
     N, T = size(X) # saving the sizes, N rows for N signals, T columns for T points in time
-    W = Matrix{Float64}(I, N, N) # unmixing matrix, initialy identity matrix   
-    Y = copy(X) # copying the data
+    W = Matrix{Float64}(I, N, N) # unmixing matrix, initially identity matrix   
+    Y = copy(X) # copying the whitened data
 
     # vectors for L-BFGS
     s_list = Vector{Matrix{Float64}}() # stores weight updates
@@ -52,10 +53,10 @@ function ica_picard(dataset::sensorData, sig::Int, m::Int, maxiter::Int, tol::Re
         psiY = score(Y)
         psidY_mean = score_der(psiY)
 
-        # gradient
+        # Compute relative gradient
         g = gradient(Y, psiY)
 
-        K = psidY_mean .- diag(g) # curvature approximation
+        K = psidY_mean .- diag(g) # curvature approximation to determine sign flipping
         signs = sign.(K) # extracting signs
         if n > 1
             sign_change = any(signs .!= old_signs) # sign flip
@@ -135,11 +136,11 @@ end
 
 Apply the hyperbolic tangent elementwise to each entry of `Y`.
 
- # Arguments
- - `Y::AbstractArray{<:Real}`: input array (vector, matrix, or higher‑dimensional array) of real numbers.
+# Arguments
+- `Y::AbstractArray{<:Real}`: input array (vector, matrix, or higher‑dimensional array) of real numbers.
 
- # Returns
- - an array with the same shape as `Y`, where each element is `tanh(y)`.
+# Returns
+- an array with the same shape as `Y`, where each element is `tanh(y)`, with `y` being an element of `Y`.
 """
 function score(Y::AbstractArray{<:Real})
     return tanh.(Y)
@@ -148,13 +149,13 @@ end
 """
     score_der(psiY::AbstractMatrix{<:Real})
 
- Computes the average derivative of the hyperbolic tangent nonlinearity for each row of `psiY`.
+Compute the average derivative of the `tanh` nonlinearity for each row of `psiY`.
    
- # Arguments
- - `psiY::AbstractMatrix{<:Real}`: input array of size `N×T`, where each row is a signal component over `T` observations.
+# Arguments
+- `psiY::AbstractMatrix{<:Real}`: An `N×T` matrix, typically computed as `tanh.(Y)`.
 
- # Returns
- - a vector in which each entry  represents the average derivative of the `tanh` nonlinearity, evaluated at each value in the corresponding row of `psiY`.
+# Returns
+- a vector in which each entry represents the average derivative of the `1 - tanh(y)^2` over each row of `psiY`, i.e. the average derivative of the `tanh` nonlinearity per component.
 """
 function score_der(psiY::AbstractMatrix{<:Real})
     return vec(1 .- mean(psiY .^ 2, dims=2))
@@ -166,8 +167,8 @@ end
 Compute the gradient of the contrast function with respect to the input signals.
     
 # Arguments
-- `Y::AbstractMatrix{<:Real}`: an `N×T` matrix where each row is a signal component over `T` samples.
-- `psiY::AbstractMatrix{<:Real}`: the elementwise derivative of the contrast function, same size as `Y`.
+- `Y::AbstractMatrix{<:Real}`: An `N×T` matrix where each row represents one estimated source over `T` time points.
+- `psiY::AbstractMatrix{<:Real}`: An `N×T` matrix, typically computed as `tanh.(Y)`.
     
 # Returns
 - An `N×N` matrix representing the relative gradient
@@ -184,7 +185,7 @@ Compute an approximation of the projected Hessian matrix.
 
 # Arguments
 - `Y::AbstractMatrix{<:Real}`: an `N×T` matrix of current signal components.
-- `psidY_mean::AbstractVector{<:Real}`: a length-`N` vector containing the average of the second derivative (or negative squared derivative) of the contrast function for each component.
+- `psidY_mean::AbstractVector{<:Real}`: a length-`N` vector with average score derivatives per component.
 - `G::AbstractMatrix{<:Real}`: the gradient matrix of size `N×N`.
 
 # Returns
@@ -192,11 +193,9 @@ Compute an approximation of the projected Hessian matrix.
 """
 function proj_hessian_approx(Y::AbstractMatrix{<:Real}, psidY_mean::AbstractVector{<:Real}, G::AbstractMatrix{<:Real})
     N = size(Y, 1) # Number of signals
-    diagonal = psidY_mean * ones(1, N) # A matrix where each row is the psidY_mean vector
-    off_diag  = repeat(diag(G), 1, N) # Extract diagonal of gradient G and replicate it across columns
-    # Compute symmetric approximation of the projected Hessian
-    # Formula: H = 0.5 * (ψ_i + ψ_j - g_i - g_j) for each (i,j)
-    hess = 0.5 * (diagonal + transpose(diagonal) - off_diag - transpose(off_diag))
+    diagonal = psidY_mean * ones(1, N) # Мatrix where each row is psidY_mean
+    off_diag  = repeat(diag(G), 1, N) # Matrix where each row is the diagonal of G
+    hess = 0.5 * (diagonal + transpose(diagonal) - off_diag - transpose(off_diag)) # Symmetric Hessian approximation
     return hess
 end
 
@@ -210,7 +209,7 @@ Clip the diagonal values of the Hessian approximation from below, ensuring all v
 - `lambda_min::Real`: minimum allowed eigenvalue
     
 # Returns
-- A matrix of the same size as `h`, with all values less than `lambda_min` replaced by `lambda_min`
+- Regularized matrix with no values below `lambda_min`
 """
 function regularize_hessian(h::AbstractMatrix{<:Real}, lambda_min::Real)
     return max.(h, lambda_min)
@@ -222,8 +221,8 @@ end
 Compute the product of the inverse Hessian approximation with the gradient.
     
 # Arguments
-- `G::AbstractMatrix{<:Real}`: the gradient matrix.
-- `h::AbstractMatrix{<:Real}`: diagonal approximation of the Hessian.
+- `G::AbstractMatrix{<:Real}`: the gradient matrix of size `N×N`.
+- `h::AbstractMatrix{<:Real}`: symmetric Hessian approximation of the same size as `G`.
     
 # Returns
 - A matrix of same size as `G`, where each element is `G[i,j] / h[i,j]`.
@@ -238,20 +237,20 @@ end
 Compute the total loss for a set of signals.
     
 # Arguments
-- `Y::AbstractMatrix{<:Real}`: matrix of shape `N×T`, where each row is a signal component over `T` samples.
-- `signs::AbstractMatrix{<:Real}`: matrix of the same shape as `Y`, containing signs or weights for each signal value.
+- `Y::AbstractMatrix{<:Real}`: matrix of shape `N×T`, where each row is a signal component over `T` time points.
+- `signs::AbstractVector{<:Real}`: a vector of length `N`, containing signs for each signal value.
     
 # Returns
-- A scalar representing the average contrast-based loss across all components and time steps.
+- A scalar representing the average loss across all components and time points.
 """
 function loss(Y, signs)
     N, T = size(Y)
     total = 0.0
     for i in 1:N
         y = Y[i, :] # Extract i-th signal row
-        s = signs[i, :] # Corresponding sign/weight row
-        term = abs.(y) .+ log1p.(exp.(-2 .* abs.(y))) # A smooth approximation of the element-wise loss
-        total += sum(s .* term) / T # Weighted average loss for this component
+        s = signs[i] # Corresponding sign row
+        term = abs.(y) .+ log1p.(exp.(-2 .* abs.(y))) # smooth loss term
+        total += sum(s .* term) / T # average loss for this component with sign applied
     end
     return total
 end
@@ -262,9 +261,9 @@ end
 Compute a search direction using the limited-memory BFGS (L-BFGS) algorithm.
     
 # Arguments
-- `G::AbstractMatrix{<:Real}: the current gradient.
-- `h::AbstractMatrix{<:Real}`: a diagonal approximation to the Hessian.
-- `s_list::Vector{AbstractMatrix{<:Real}}`: list of previous update vectors.
+- `G::AbstractMatrix{<:Real}: the current gradient matrix.
+- `h::AbstractMatrix{<:Real}`: a diagonal approximation to the Hessian matrix.
+- `s_list::Vector{AbstractMatrix{<:Real}}`: list of previous update matrices.
 - `y_list::Vector{AbstractMatrix{<:Real}}`: list of previous gradient differences.
 - `r_list::Vector{Float64}`: list of scalars for each pair `(s, y)`.
     
@@ -275,7 +274,7 @@ function l_bfgs_direction(G, h, s_list, y_list, r_list)
     q = copy(G) # Initialize q with the current gradient
     a_list = Vector{Float64}()
     m = length(s_list)
-    for i in m:-1:1 # apply the inverse Hessian approximation from most recent to oldest
+    for i in m:-1:1 # iterate from most recent to oldest update
         s = s_list[i]
         y = y_list[i]
         r = r_list[i]
@@ -284,7 +283,7 @@ function l_bfgs_direction(G, h, s_list, y_list, r_list)
         q .-= alpha .* y
     end
     z = solve_hessian(q, h)
-    for i in 1:m # refine using older updates in forward order
+    for i in 1:m # iterate from oldest to most recent update
         s = s_list[i]
         y = y_list[i]
         r = r_list[i]
@@ -301,22 +300,22 @@ end
 Perform a backtracking line search using a matrix exponential update.
     
 # Arguments
-- `Y::AbstractMatrix{<:Real}`: current signal matrix (`N×T`).
-- `direction::AbstractMatrix{<:Real}`: descent direction matrix of the same size as `Y`.
-- `signs::AbstractVector{<:Real}`: sign weights for the loss, same size as `Y`.
-- `current_loss::Real`: current loss value, or `Inf` to force recomputation.
+- `Y::AbstractMatrix{<:Real}`: current signal matrix of size`N×T`.
+- `direction::AbstractMatrix{<:Real}`: descent direction matrix of size `N×N`.
+- `signs::AbstractVector{<:Real}`: vector of length `N` containing sign weights for each signal component.
+- `current_loss::Real`: current loss value.
 - `ls_tries::Integer` (keyword): maximum number of backtracking steps.
     
 # Returns
 - A tuple `(converged, Y_new, new_loss, alpha)` where
-- `converged::Bool` indicates whether a successful step was found,
-- `Y_new::AbstractMatrix{<:Real}` is the updated signal matrix (or original if no step succeeded),
-- `new_loss::Real` is the loss at `Y_new`,
-- `alpha::Real` is the final step size.
+    - `converged::Bool` indicates whether a successful step was found,
+    - `Y_new::AbstractMatrix{<:Real}` is the updated signal matrix (or original if no step succeeded),
+    - `new_loss::Real` is the loss at `Y_new`,
+    - `alpha::Real` is the final step size.
 """
 function line_search(Y, direction, signs, current_loss; ls_tries)
     alpha = 1.0 # initial step size
-    loss0 = isfinite(current_loss) ? current_loss : loss(Y, signs) # compute current loss
+    loss0 = isfinite(current_loss) ? current_loss : loss(Y, signs) # compute current loss if needed
     Y_new = Y 
     new_loss = loss0
     for _ in 1:ls_tries
