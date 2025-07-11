@@ -25,4 +25,4 @@ It aims to find a linear transformation that simultaneously diagonalizes these m
 
 **Convergence Issues**: May require multiple runs or iterations to reach a good solution, especially with noisy or ill-conditioned data.
 As can be seen in the following diagram, only iteration 24 provided the correct separation.
-![Demonstration of convergence issue](plot_4.svg)
+![Demonstration of convergence issue](media/plot_4.svg)
